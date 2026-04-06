@@ -1,0 +1,32 @@
+{
+  "name": "erp-backend",
+  "version": "0.1.0",
+  "description": "ERP Backend for Thai SME — HR, Finance, PM modules",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/app.ts",
+    "start": "bun src/app.ts",
+    "test": "bun test",
+    "lint": "bun biome check src/",
+    "format": "bun biome format src/ --write",
+    "db:generate": "bun drizzle-kit generate",
+    "db:migrate": "bun drizzle-kit migrate",
+    "db:studio": "bun drizzle-kit studio"
+  },
+  "dependencies": {
+    "elysia": "latest",
+    "drizzle-orm": "latest",
+    "postgres": "latest",
+    "jose": "latest",
+    "decimal.js": "latest"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "drizzle-kit": "latest",
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "trustedDependencies": [
+    "@biomejs/biome"
+  ]
+}
