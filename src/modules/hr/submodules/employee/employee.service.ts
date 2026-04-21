@@ -3,7 +3,7 @@ import { db } from '../../../../shared/db/client'
 import { validateNationalId } from '../../../../shared/utils/thai-id'
 import { NotFoundError, ValidationError } from '../../../../shared/middleware/error.middleware'
 import type { PaginatedResult } from '../../../../shared/types/common.types'
-import { employees } from '../../hr.schema'
+import { employees, users } from '../../hr.schema'
 import type {
   CreateEmployeePayload,
   Employee,
@@ -37,6 +37,9 @@ export const EmployeeService = {
     }
     if (query.status) {
       conditions.push(eq(employees.status, query.status))
+    }
+    if (query.employmentType) {
+      conditions.push(eq(employees.employmentType, query.employmentType))
     }
 
     const where = conditions.length > 0 ? and(...conditions) : undefined
@@ -97,14 +100,24 @@ export const EmployeeService = {
         lastnameTh: payload.lastnameTh,
         firstnameEn: payload.firstnameEn ?? null,
         lastnameEn: payload.lastnameEn ?? null,
+        nickname: payload.nickname ?? null,
         nationalId: payload.nationalId,
         gender: payload.gender,
-        birthDate: payload.birthDate.toISOString().slice(0, 10),
+        birthDate: payload.birthDate,
+        phone: payload.phone ?? null,
+        email: payload.email ?? null,
+        address: payload.address ?? null,
         employmentType: payload.employmentType,
-        startDate: payload.startDate.toISOString().slice(0, 10),
+        startDate: payload.startDate,
+        endDate: payload.endDate ?? null,
         departmentId: payload.departmentId ?? null,
         positionId: payload.positionId ?? null,
+        managerId: payload.managerId ?? null,
         baseSalary: payload.baseSalary,
+        bankName: payload.bankName ?? null,
+        bankAccountNumber: payload.bankAccountNumber ?? null,
+        bankAccountName: payload.bankAccountName ?? null,
+        ssEnrolled: payload.ssEnrolled ?? true,
       })
       .returning()
 
@@ -126,6 +139,30 @@ export const EmployeeService = {
 
     if (!updated) throw new NotFoundError('employee')
     return updated as Employee
+  },
+
+  /** Soft terminate: status + end date (Asia/Bangkok calendar day). */
+  async terminate(id: string): Promise<void> {
+    await EmployeeService.getById(id)
+    const endDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+    await db
+      .update(employees)
+      .set({
+        status: 'terminated',
+        endDate,
+        updatedAt: new Date(),
+      })
+      .where(eq(employees.id, id))
+  },
+
+  async getByUserId(userId: string): Promise<Employee> {
+    const u = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    })
+    if (!u?.employeeId) {
+      throw new NotFoundError('employee')
+    }
+    return EmployeeService.getById(u.employeeId)
   },
 }
 

@@ -9,21 +9,24 @@
     "test": "bun test",
     "lint": "bun biome check src/",
     "format": "bun biome format src/ --write",
-    "db:generate": "bun drizzle-kit generate",
-    "db:migrate": "bun drizzle-kit migrate",
-    "db:studio": "bun drizzle-kit studio"
+    "db:generate": "bun --bun drizzle-kit generate",
+    "db:migrate": "bun --bun drizzle-kit migrate",
+    "db:studio": "bun --bun drizzle-kit studio",
+    "db:seed": "bun run src/scripts/seed.ts"
   },
   "dependencies": {
-    "elysia": "latest",
+    "@elysiajs/cors": "^1.4.1",
+    "dotenv": "^17.4.1",
+    "decimal.js": "latest",
     "drizzle-orm": "latest",
-    "postgres": "latest",
+    "elysia": "latest",
     "jose": "latest",
-    "decimal.js": "latest"
+    "postgres": "latest"
   },
   "devDependencies": {
     "@biomejs/biome": "latest",
-    "drizzle-kit": "latest",
     "@types/bun": "latest",
+    "drizzle-kit": "latest",
     "typescript": "^5.0.0"
   },
   "trustedDependencies": [
