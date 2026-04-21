@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>วันหยุด — Holiday List — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — HolidayListPage · route: <code>/hr/holidays</code></span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link" href="#">พนักงาน</a>
+          <a class="nav-link" href="#">ลาหยุด</a>
+          <div class="nav-group-label">เวลา</div>
+          <a class="nav-link" href="#">ลงเวลา</a>
+          <a class="nav-link" href="#">ล่วงเวลา (OT)</a>
+          <a class="nav-link" href="#">ตารางเวลา</a>
+          <a class="nav-link active" href="#">วันหยุด</a>
+          <div class="nav-group-label">เงินเดือน</div>
+          <a class="nav-link" href="#">รันเงินเดือน</a>
+        </nav>
+      </aside>
+
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">ปฏิทินวันหยุด</span>
+          <div class="header-actions">
+            <div class="avatar">HR</div>
+          </div>
+        </header>
+
+        <main class="main-content stack-y-6">
+
+          <!-- Page header -->
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">วันหยุดประจำปี</h1>
+              <p class="text-muted" style="margin:4px 0 0;font-size:13px">ใช้ในการคำนวณ attendance และ payroll</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm">+ เพิ่มวันหยุด</button>
+          </div>
+
+          <!-- Summary + filter bar -->
+          <div class="flex-row filter-toolbar flex-between">
+            <div class="flex-row" style="gap:12px">
+              <select class="input select-auto">
+                <option>ปี 2568 (2025)</option>
+                <option>ปี 2567 (2024)</option>
+                <option>ปี 2566 (2023)</option>
+              </select>
+              <select class="input select-auto">
+                <option>ทุกประเภท</option>
+                <option>นักขัตฤกษ์</option>
+                <option>วันหยุดบริษัท</option>
+              </select>
+            </div>
+            <div class="flex-row gap-3">
+              <span class="badge badge-success">นักขัตฤกษ์ 13 วัน</span>
+              <span class="badge badge-outline">บริษัท 2 วัน</span>
+            </div>
+          </div>
+
+          <!-- Upcoming highlight -->
+          <div class="alert-warn" style="display:flex;align-items:center;gap:8px">
+            <span>📅</span>
+            <span>วันหยุดถัดไป: <strong>วันฉัตรมงคล</strong> — 4 พฤษภาคม 2568 (อีก 16 วัน)</span>
+          </div>
+
+          <!-- Holiday table -->
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>วันที่</th>
+                  <th>วัน</th>
+                  <th>ชื่อวันหยุด</th>
+                  <th>ประเภท</th>
+                  <th>หมายเหตุ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-mono">01/01/2568</td>
+                  <td>พุธ</td>
+                  <td class="font-medium">วันขึ้นปีใหม่</td>
+                  <td><span class="badge badge-success">นักขัตฤกษ์</span></td>
+                  <td class="text-muted text-xs">—</td>
+                  <td><button type="button" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">13/04/2568</td>
+                  <td>อาทิตย์</td>
+                  <td class="font-medium">วันสงกรานต์</td>
+                  <td><span class="badge badge-success">นักขัตฤกษ์</span></td>
+                  <td class="text-muted text-xs">—</td>
+                  <td><button type="button" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">14/04/2568</td>
+                  <td>จันทร์</td>
+                  <td class="font-medium">วันสงกรานต์ (ต่อเนื่อง)</td>
+                  <td><span class="badge badge-success">นักขัตฤกษ์</span></td>
+                  <td class="text-muted text-xs">—</td>
+                  <td><button type="button" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">15/04/2568</td>
+                  <td>อังคาร</td>
+                  <td class="font-medium">วันสงกรานต์ (ต่อเนื่อง)</td>
+                  <td><span class="badge badge-success">นักขัตฤกษ์</span></td>
+                  <td class="text-muted text-xs">—</td>
+                  <td><button type="button" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">04/05/2568</td>
+                  <td>อาทิตย์</td>
+                  <td class="font-medium">วันฉัตรมงคล</td>
+                  <td><span class="badge badge-success">นักขัตฤกษ์</span></td>
+                  <td class="text-muted text-xs">—</td>
+                  <td><button type="button" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">26/05/2568</td>
+                  <td>จันทร์</td>
+                  <td class="font-medium">วันวิสาขบูชา</td>
+                  <td><span class="badge badge-success">นักขัตฤกษ์</span></td>
+                  <td class="text-muted text-xs">—</td>
+                  <td><button type="button" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+                <tr style="background:color-mix(in srgb,var(--primary) 4%,var(--card))">
+                  <td class="text-mono">02/06/2568</td>
+                  <td>จันทร์</td>
+                  <td class="font-medium">วันหยุดพิเศษบริษัท (ครบรอบ 10 ปี)</td>
+                  <td><span class="badge badge-outline">บริษัท</span></td>
+                  <td class="text-muted text-xs">เพิ่มโดย admin</td>
+                  <td><button type="button" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">05/12/2568</td>
+                  <td>ศุกร์</td>
+                  <td class="font-medium">วันชาติ</td>
+                  <td><span class="badge badge-success">นักขัตฤกษ์</span></td>
+                  <td class="text-muted text-xs">—</td>
+                  <td><button type="button" class="btn btn-sm btn-danger">ลบ</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="text-muted text-xs">
+            รวม 15 วันหยุด ปี 2568 · วันหยุดที่ตรงวันเสาร์/อาทิตย์อาจมีวันชดเชยตามประกาศ
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ขาย — ใบสั่งขาย — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — SalesOrderListPage · route: <code>/finance/sales-orders</code></span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">ขาย</div>
+          <a class="nav-link" href="#">ใบเสนอราคา</a>
+          <a class="nav-link active" href="#">ใบสั่งขาย</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">ใบสั่งขาย</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">ใบสั่งขาย</h1>
+            <button type="button" class="btn btn-primary btn-sm">+ สร้างใบสั่งขาย</button>
+          </div>
+
+          <!-- Toolbar: search + filters -->
+          <div class="flex-row" style="gap:0.5rem;flex-wrap:wrap;align-items:center">
+            <input class="input" style="width:220px" placeholder="ค้นหาเลขที่ / ชื่อลูกค้า…" />
+            <select class="input" style="width:180px">
+              <option value="">ทุกสถานะ</option>
+              <option>draft</option>
+              <option>confirmed</option>
+              <option>partially_invoiced</option>
+              <option>invoiced</option>
+              <option>cancelled</option>
+            </select>
+            <select class="input" style="width:180px">
+              <option value="">ลูกค้าทั้งหมด</option>
+              <option>บริษัท ตัวอย่าง จำกัด</option>
+              <option>ห้างหุ้นส่วน ABC</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>เลขที่</th>
+                  <th>ลูกค้า</th>
+                  <th>วันที่สั่ง</th>
+                  <th>กำหนดส่ง</th>
+                  <th class="text-right">ยอดก่อน VAT</th>
+                  <th class="text-right">ยอดรวม</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-mono">SO-2026-0004</td>
+                  <td>บริษัท ตัวอย่าง จำกัด</td>
+                  <td>16 เม.ย. 2569</td>
+                  <td>30 เม.ย. 2569</td>
+                  <td class="text-right">฿110,000</td>
+                  <td class="text-right">฿117,700</td>
+                  <td><span class="badge badge-success">confirmed</span></td>
+                  <td><a href="#" class="link">เปิด</a></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">SO-2026-0003</td>
+                  <td>ห้างหุ้นส่วน ABC</td>
+                  <td>10 เม.ย. 2569</td>
+                  <td>25 เม.ย. 2569</td>
+                  <td class="text-right">฿120,000</td>
+                  <td class="text-right">฿128,400</td>
+                  <td><span class="badge badge-warn">partially_invoiced</span></td>
+                  <td><a href="#" class="link">เปิด</a></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">SO-2026-0002</td>
+                  <td>บริษัท ตัวอย่าง จำกัด</td>
+                  <td>01 เม.ย. 2569</td>
+                  <td>—</td>
+                  <td class="text-right">฿50,000</td>
+                  <td class="text-right">฿53,500</td>
+                  <td><span class="badge">draft</span></td>
+                  <td><a href="#" class="link">เปิด</a></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">SO-2026-0001</td>
+                  <td>บริษัท ตัวอย่าง จำกัด</td>
+                  <td>15 มี.ค. 2569</td>
+                  <td>31 มี.ค. 2569</td>
+                  <td class="text-right">฿80,000</td>
+                  <td class="text-right">฿85,600</td>
+                  <td><span class="badge badge-success">invoiced</span></td>
+                  <td><a href="#" class="link">เปิด</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="flex-row" style="gap:0.5rem;align-items:center;font-size:0.85rem;color:var(--text-muted)">
+            <span>แสดง 4 จาก 4 รายการ</span>
+            <div style="margin-left:auto;display:flex;gap:0.25rem">
+              <button class="btn btn-sm" disabled>&lsaquo; ก่อนหน้า</button>
+              <button class="btn btn-sm" disabled>ถัดไป &rsaquo;</button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+          document.documentElement.classList.toggle("dark", d.checked);
+        }
+      })();
+    </script>
+  </body>
+</html>

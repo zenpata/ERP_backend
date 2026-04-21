@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logout confirm — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span
+        ><strong>Static preview</strong> — ยืนยันออกจากระบบ (modal) · ไม่เชื่อม API</span
+      >
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+
+    <div class="main-content" style="min-height: 40vh">
+      <p class="text-muted text-center">พื้นหลังจำลอง — หลังกด Logout จากเมนูบัญชี</p>
+    </div>
+
+    <div class="modal-backdrop" role="presentation">
+      <div class="preview-stack" style="width: 100%; max-width: 400px; margin: 0 auto">
+        <div class="control-panel" style="margin-bottom: 12px">
+          <h2>Preview controls</h2>
+          <label class="control-row">
+            <input id="toggleSubmitting" type="checkbox" />
+            <span>กำลังออกจากระบบ (ปุ่ม loading)</span>
+          </label>
+        </div>
+
+        <div class="modal-dialog" role="dialog" aria-labelledby="logout-title">
+          <div class="modal-dialog__head">
+            <h1 id="logout-title">ออกจากระบบ?</h1>
+          </div>
+          <div class="modal-dialog__body">
+            <p class="m-0" style="font-size: 14px; color: var(--muted-foreground)">
+              คุณจะถูกพากลับไปหน้าเข้าสู่ระบบ และเซสชันปัจจุบันจะถูกยกเลิก
+            </p>
+            <label class="flex-row mt-3" style="cursor: pointer">
+              <input id="allDevices" type="checkbox" />
+              <span class="font-medium">ออกจากทุกอุปกรณ์</span>
+            </label>
+            <p class="hint text-xs mt-2 mb-0">
+              เมื่อเลือก ระบบจะส่ง <code class="text-mono">allDevices: true</code> ใน body ตามสัญญา
+              API (mock เท่านั้น)
+            </p>
+          </div>
+          <div class="modal-dialog__foot">
+            <button type="button" class="btn">ยกเลิก</button>
+            <button id="logoutBtn" type="button" class="btn btn-danger">ออกจากระบบ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var dark = document.getElementById("previewDarkMode");
+        var submitting = document.getElementById("toggleSubmitting");
+        var logoutBtn = document.getElementById("logoutBtn");
+        function sync() {
+          document.documentElement.classList.toggle("dark", dark.checked);
+          if (submitting.checked) {
+            logoutBtn.disabled = true;
+            logoutBtn.textContent = "กำลังออกจากระบบ...";
+          } else {
+            logoutBtn.disabled = false;
+            logoutBtn.textContent = "ออกจากระบบ";
+          }
+        }
+        [dark, submitting].forEach(function (el) {
+          el.addEventListener("change", sync);
+        });
+        sync();
+      })();
+    </script>
+  </body>
+</html>

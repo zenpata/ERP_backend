@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>งบการเงิน — งบกระแสเงินสด — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      .breadcrumb { font-size: 12px; color: var(--muted-foreground); display: flex; align-items: center; gap: 6px; }
+      .breadcrumb a { color: var(--primary); text-decoration: none; }
+      .section-header { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+        color: var(--muted-foreground); padding: 10px 0 6px; border-bottom: 1px solid var(--border); }
+      .meta-banner { display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+        background: var(--warning-bg); border: 1px solid var(--warning-border);
+        border-radius: var(--radius-md); font-size: 12px; color: var(--warning-fg); }
+      .state-toggle { display: flex; gap: 6px; flex-wrap: wrap; }
+      .state-btn { font-size: 11px; padding: 3px 10px; border: 1px solid var(--border);
+        border-radius: var(--radius-sm); background: var(--card); color: var(--muted-foreground); cursor: pointer; }
+      .state-btn.active { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+      .export-btn-disabled { opacity: 0.4; pointer-events: none; }
+      .td-indent { padding-left: 24px !important; }
+      .row-section { background: color-mix(in srgb, var(--muted) 30%, var(--card)); }
+      .row-total-section { font-weight: 600; border-top: 1px solid var(--border); }
+      .cf-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+      .cf-tile { border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--card); padding: 12px 14px; }
+      .cf-tile__label { font-size: 11px; color: var(--muted-foreground); margin-bottom: 4px; }
+      .cf-tile__value { font-size: 16px; font-weight: 700; }
+      .cf-tile--positive .cf-tile__value { color: #059669; }
+      .cf-tile--negative .cf-tile__value { color: var(--destructive); }
+    </style>
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — CashFlowStatementReportPage · <code>/finance/reports/cash-flow</code></span>
+      <span class="state-toggle">
+        <button class="state-btn active" onclick="showState('default',this)">Default</button>
+        <button class="state-btn" onclick="showState('loading',this)">Loading</button>
+        <button class="state-btn" onclick="showState('empty',this)">Empty</button>
+        <button class="state-btn" onclick="showState('error',this)">Error</button>
+        <button class="state-btn" onclick="showState('export',this)">Export dialog</button>
+      </span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link" href="#">รายงาน (Hub)</a>
+          <a class="nav-link active" href="#">งบกระแสเงินสด</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">งบกระแสเงินสด</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content main-content--relative stack-y-6" id="mainContent">
+
+          <!-- Breadcrumb -->
+          <div class="breadcrumb">
+            <a href="#">รายงาน</a>
+            <span>/</span>
+            <span>งบกระแสเงินสด</span>
+          </div>
+
+          <!-- Page header + Export (disabled until report loaded) -->
+          <div class="page-header">
+            <h1 class="m-0">งบกระแสเงินสด (Cash Flow)</h1>
+            <button type="button" class="btn btn-sm export-btn-disabled" id="exportBtn">Export</button>
+          </div>
+
+          <!-- Filter bar — periodFrom + periodTo (month range) -->
+          <div class="card card-pad">
+            <div class="flex-row filter-toolbar--tight" style="align-items:flex-end; gap:12px; flex-wrap:wrap;">
+              <div class="field field--bare">
+                <label class="field-label">เดือนเริ่มต้น <span class="text-destructive">*</span></label>
+                <input class="input input-max-w-sm" type="month" value="2026-01" />
+              </div>
+              <div class="field field--bare">
+                <label class="field-label">เดือนสิ้นสุด <span class="text-destructive">*</span></label>
+                <input class="input input-max-w-sm" type="month" value="2026-03" />
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" onclick="loadReport()" style="margin-top:auto;">ดูรายงาน</button>
+            </div>
+          </div>
+
+          <!-- === DEFAULT STATE === -->
+          <div id="state-default">
+
+            <!-- Meta / freshness banner — isEstimated important for cash-flow (multi-source) -->
+            <div class="meta-banner" style="margin-bottom:12px;">
+              ⚠ ข้อมูลบางรายการยังประมาณการ (isEstimated) — ดึงข้อมูลจากหลายระบบ · อัปเดตล่าสุด 18 เม.ย. 2026, 06:30
+            </div>
+
+            <!-- Opening / Net change / Closing cash summary -->
+            <div class="card card-pad" style="margin-bottom:12px;">
+              <div class="cf-summary">
+                <div class="cf-tile">
+                  <div class="cf-tile__label">เงินสดต้นงวด</div>
+                  <div class="cf-tile__value">฿800,000</div>
+                </div>
+                <div class="cf-tile cf-tile--positive">
+                  <div class="cf-tile__label">การเปลี่ยนแปลงสุทธิ</div>
+                  <div class="cf-tile__value">+฿75,000</div>
+                </div>
+                <div class="cf-tile cf-tile--positive">
+                  <div class="cf-tile__label">เงินสดปลายงวด</div>
+                  <div class="cf-tile__value">฿875,000</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Report table — 3 sections: operating / investing / financing from series[] -->
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>รายการ</th>
+                    <th class="text-right">ม.ค.–มี.ค. 2569</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- section: operating -->
+                  <tr class="row-section">
+                    <td colspan="2" class="section-header">กิจกรรมดำเนินงาน (Operating)</td>
+                  </tr>
+                  <tr>
+                    <td class="td-indent">รับเงินจากลูกค้า</td>
+                    <td class="text-right">฿3,550,000</td>
+                  </tr>
+                  <tr>
+                    <td class="td-indent">จ่ายเงินให้เจ้าหนี้</td>
+                    <td class="text-right">(฿2,100,000)</td>
+                  </tr>
+                  <tr>
+                    <td class="td-indent">จ่ายเงินเดือนพนักงาน</td>
+                    <td class="text-right">(฿480,000)</td>
+                  </tr>
+                  <tr>
+                    <td class="td-indent">จ่ายภาษีเงินได้</td>
+                    <td class="text-right">(฿375,000)</td>
+                  </tr>
+                  <tr class="row-total-section">
+                    <td class="td-indent row-total">กระแสเงินสดจากกิจกรรมดำเนินงาน</td>
+                    <td class="text-right row-total" style="color:#059669;">฿595,000</td>
+                  </tr>
+
+                  <!-- section: investing -->
+                  <tr class="row-section">
+                    <td colspan="2" class="section-header">กิจกรรมลงทุน (Investing)</td>
+                  </tr>
+                  <tr>
+                    <td class="td-indent">ซื้ออุปกรณ์</td>
+                    <td class="text-right">(฿520,000)</td>
+                  </tr>
+                  <tr class="row-total-section">
+                    <td class="td-indent row-total">กระแสเงินสดจากกิจกรรมลงทุน</td>
+                    <td class="text-right row-total" style="color:var(--destructive);">(฿520,000)</td>
+                  </tr>
+
+                  <!-- section: financing -->
+                  <tr class="row-section">
+                    <td colspan="2" class="section-header">กิจกรรมจัดหาเงิน (Financing)</td>
+                  </tr>
+                  <tr>
+                    <td class="td-indent">รับเงินกู้</td>
+                    <td class="text-right">฿0</td>
+                  </tr>
+                  <tr class="row-total-section">
+                    <td class="td-indent row-total">กระแสเงินสดจากกิจกรรมจัดหาเงิน</td>
+                    <td class="text-right row-total">฿0</td>
+                  </tr>
+
+                  <!-- summary rows -->
+                  <tr style="border-top:2px solid var(--border);">
+                    <td class="row-total">เงินสดเพิ่มขึ้น (ลดลง) สุทธิ</td>
+                    <td class="text-right row-total" style="color:#059669;">+฿75,000</td>
+                  </tr>
+                  <tr>
+                    <td>เงินสดต้นงวด (1 ม.ค. 2569)</td>
+                    <td class="text-right">฿800,000</td>
+                  </tr>
+                  <tr>
+                    <td class="row-total" style="font-size:14px;">เงินสดปลายงวด (31 มี.ค. 2569)</td>
+                    <td class="text-right row-total" style="font-size:14px; color:#059669;">฿875,000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- === LOADING STATE === -->
+          <div id="state-loading" style="display:none;">
+            <div style="position:relative; min-height:240px; border-radius:var(--radius-xl); border:1px solid var(--border); background:var(--card); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px;">
+              <div class="spinner"></div>
+              <span class="overlay-busy__text">กำลังโหลดงบกระแสเงินสด (รวมข้อมูลจากหลายระบบ)…</span>
+            </div>
+          </div>
+
+          <!-- === EMPTY STATE === -->
+          <div id="state-empty" style="display:none;">
+            <div class="card card-pad" style="text-align:center; padding:48px 24px; color:var(--muted-foreground);">
+              <div style="font-size:36px; margin-bottom:12px;">📭</div>
+              <p style="font-size:14px; font-weight:600; margin:0 0 6px;">ไม่มีรายการในช่วงเวลาที่เลือก</p>
+              <p style="font-size:12px; margin:0;">ลองเปลี่ยนช่วงเดือน หรือตรวจสอบว่ามีการบันทึกธุรกรรมธนาคาร</p>
+            </div>
+          </div>
+
+          <!-- === ERROR STATE === -->
+          <div id="state-error" style="display:none;">
+            <div class="card card-pad" style="border-color:var(--destructive); text-align:center; padding:40px 24px;">
+              <div style="font-size:32px; margin-bottom:10px;">⚠</div>
+              <p style="font-size:14px; font-weight:600; margin:0 0 6px; color:var(--destructive);">โหลดงบกระแสเงินสดไม่สำเร็จ</p>
+              <p style="font-size:12px; color:var(--muted-foreground); margin:0 0 16px;">ระบบรวมข้อมูลล้มเหลว กรุณาลองใหม่ — filter ที่เลือกยังคงอยู่</p>
+              <button type="button" class="btn btn-primary btn-sm">ลองใหม่</button>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- Export dialog -->
+    <div class="modal-backdrop" id="exportModal" style="display:none;">
+      <div class="modal-dialog">
+        <div class="modal-dialog__head">
+          <h1>Export งบกระแสเงินสด</h1>
+          <p style="font-size:12px; color:var(--muted-foreground); margin:6px 0 0;">ช่วงเวลา: ม.ค. 2569 – มี.ค. 2569 (filter จากหน้าจอ — ไม่สามารถแก้ใน dialog นี้)</p>
+        </div>
+        <div class="modal-dialog__body">
+          <div class="field">
+            <label class="field-label">รูปแบบไฟล์ <span class="text-destructive">*</span></label>
+            <div style="display:flex; gap:12px; margin-top:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="radio" name="exportFmt" value="pdf" checked /> PDF</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="radio" name="exportFmt" value="xlsx" /> Excel (XLSX)</label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-dialog__foot">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('exportModal').style.display='none'">ยกเลิก</button>
+          <button type="button" class="btn btn-primary btn-sm">ดาวน์โหลดงบกระแสเงินสด</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) { d.addEventListener("change", function () { document.documentElement.classList.toggle("dark", d.checked); }); }
+
+        var states = ["default","loading","empty","error"];
+
+        window.showState = function(name, btn) {
+          states.forEach(function(s) { var el = document.getElementById("state-" + s); if (el) el.style.display = "none"; });
+          document.getElementById("exportModal").style.display = "none";
+          document.querySelectorAll(".state-btn").forEach(function(b) { b.classList.remove("active"); });
+          if (btn) btn.classList.add("active");
+
+          if (name === "export") {
+            document.getElementById("state-default").style.display = "";
+            document.getElementById("exportModal").style.display = "flex";
+            document.getElementById("exportBtn").classList.remove("export-btn-disabled");
+          } else {
+            var el = document.getElementById("state-" + name);
+            if (el) el.style.display = "";
+            document.getElementById("exportBtn").classList[name === "default" ? "remove" : "add"]("export-btn-disabled");
+          }
+        };
+
+        window.loadReport = function() { showState("default", document.querySelector(".state-btn")); };
+
+        document.getElementById("exportBtn").addEventListener("click", function() {
+          if (!this.classList.contains("export-btn-disabled")) document.getElementById("exportModal").style.display = "flex";
+        });
+      })();
+    </script>
+  </body>
+</html>

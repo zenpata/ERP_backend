@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pattern พิมพ์ / Export — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      .pattern-section { border: 1px solid var(--border, #e2e8f0); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; }
+      .pattern-section h3 { margin: 0 0 0.75rem; font-size: 0.95rem; font-weight: 600; }
+      .pattern-label { font-size: 0.75rem; color: var(--muted, #64748b); margin-bottom: 0.5rem; }
+      .btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+      .badge-inline { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; }
+      .badge-processing { background: #fef3c7; color: #92400e; }
+      .badge-done { background: #d1fae5; color: #065f46; }
+      .progress-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; }
+      .progress-banner .info { font-size: 0.85rem; }
+      .progress-banner .info strong { display: block; margin-bottom: 0.25rem; }
+      .preview-modal-mock { border: 2px solid #7c3aed; border-radius: 8px; padding: 1.25rem; background: #fafaf9; }
+      .preview-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; }
+      .invoice-paper { background: white; border: 1px solid #e2e8f0; border-radius: 4px; padding: 1.5rem; font-size: 0.8rem; }
+      .invoice-paper .inv-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+      .invoice-paper .inv-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; }
+      .format-selector { display: flex; gap: 0.5rem; }
+      .format-btn { border: 1px solid #cbd5e1; background: white; padding: 0.35rem 0.85rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+      .format-btn.active { border-color: #7c3aed; background: #ede9fe; color: #5b21b6; font-weight: 600; }
+      .table-row-actions { display: flex; align-items: center; gap: 0.5rem; }
+      .text-xs { font-size: 0.75rem; }
+      .text-muted { color: var(--muted, #64748b); }
+      .divider { border: none; border-top: 1px solid #e2e8f0; margin: 1.25rem 0; }
+    </style>
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — R2-09 Print &amp; Export Patterns (cross-module)</span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">Finance</div>
+          <a class="nav-link active" href="#">Invoice Detail</a>
+          <a class="nav-link" href="#">Reports</a>
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link" href="#">Payroll</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">Pattern พิมพ์ / ส่งออกเอกสาร</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content stack-y-6">
+
+          <!-- ─── Pattern 1: Sub-flow A — Invoice (Preview + Download) ─── -->
+          <section class="pattern-section">
+            <h3>Pattern A — Invoice Detail: Preview + Download PDF (2 actions อิสระ)</h3>
+            <p class="text-xs text-muted">หน้า <code>/finance/invoices/:id</code> — ปุ่มทั้งสองทำงานแยกอิสระ ไม่ sequential</p>
+
+            <div class="pattern-label">Action bar บน Invoice Detail</div>
+            <div class="btn-group" style="margin-bottom: 1rem">
+              <button class="btn btn-sm btn-outline" onclick="document.getElementById('previewModal').style.display='block'">Preview Invoice</button>
+              <button class="btn btn-sm" id="dlBtn">Download Invoice PDF</button>
+              <button class="btn btn-sm" disabled id="dlLoading" style="display:none">⏳ กำลังดาวน์โหลด…</button>
+            </div>
+
+            <!-- Toast success mock -->
+            <div style="background:#d1fae5; border:1px solid #6ee7b7; border-radius:6px; padding:0.6rem 1rem; font-size:0.8rem; display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem">
+              ✅ <strong>invoice-INV-2026-0042.pdf</strong> ดาวน์โหลดสำเร็จ
+            </div>
+
+            <!-- Toast error mock -->
+            <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:6px; padding:0.6rem 1rem; font-size:0.8rem; display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem">
+              <span>❌ ดาวน์โหลดล้มเหลว — กรุณาลองใหม่</span>
+              <button class="btn btn-sm" style="padding:0.2rem 0.7rem">Retry</button>
+            </div>
+
+            <!-- Preview Modal Mock -->
+            <div id="previewModal" style="display:none">
+              <div class="preview-modal-mock">
+                <div class="preview-modal-header">
+                  <strong style="font-size:0.9rem">Preview: INV-2026-0042</strong>
+                  <div class="btn-group">
+                    <button class="btn btn-sm">Download PDF</button>
+                    <button class="btn btn-sm btn-outline" onclick="document.getElementById('previewModal').style.display='none'">Close</button>
+                  </div>
+                </div>
+                <div class="invoice-paper">
+                  <div class="inv-header">
+                    <div>
+                      <div style="font-weight:700; font-size:0.95rem">บริษัท ตัวอย่าง จำกัด</div>
+                      <div class="text-muted text-xs">123 สุขุมวิท กรุงเทพฯ · เลขที่ภาษี 0105547000001</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div class="inv-title">ใบแจ้งหนี้</div>
+                      <div class="text-xs">INV-2026-0042</div>
+                      <div class="text-xs text-muted">วันที่: 19 เม.ย. 2569</div>
+                    </div>
+                  </div>
+                  <div class="table-wrap">
+                    <table class="data">
+                      <thead><tr><th>รายการ</th><th class="text-right">จำนวน</th><th class="text-right">ราคา/หน่วย</th><th class="text-right">รวม</th></tr></thead>
+                      <tbody>
+                        <tr><td>ค่าบริการที่ปรึกษา เม.ย.</td><td class="text-right">1</td><td class="text-right">50,000</td><td class="text-right">50,000</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style="text-align:right; margin-top:0.75rem; font-size:0.8rem">
+                    <div>ก่อน VAT: <strong>50,000.00</strong></div>
+                    <div>VAT 7%: <strong>3,500.00</strong></div>
+                    <div style="font-size:1rem; font-weight:700; margin-top:0.25rem">ยอดรวม: 53,500.00 บาท</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ─── Pattern 2: Sub-flows B/C/D/E — Simple inline PDF download ─── -->
+          <section class="pattern-section">
+            <h3>Pattern B/C/D/E — Inline PDF Download (AP Bill / Quotation / PO / WHT Certificate)</h3>
+            <p class="text-xs text-muted">ปุ่มเดียว synchronous — ไม่มี Preview, ไม่มี jobId</p>
+
+            <div class="pattern-label">AP Bill Detail — ตัวอย่าง</div>
+            <div class="btn-group">
+              <button class="btn btn-sm">Download Vendor Invoice PDF</button>
+              <button class="btn btn-sm" disabled>⏳ กำลังสร้างไฟล์…</button>
+            </div>
+            <div class="text-xs text-muted" style="margin-top:0.5rem">รูปแบบเดียวกันใช้กับ: [Download Quotation PDF] [Download PO PDF] [Download WHT Certificate]</div>
+          </section>
+
+          <!-- ─── Pattern 3: Sub-flows F/G/H — Report export with format selector ─── -->
+          <section class="pattern-section">
+            <h3>Pattern F/G/H — Report Export พร้อม Format Selector (P&amp;L / BS / CF / VAT / PND)</h3>
+            <p class="text-xs text-muted">user เลือก format (PDF หรือ Excel) ก่อน export — period filter มาจากหน้า report อยู่แล้ว</p>
+
+            <div class="pattern-label">Export dialog / action bar บนหน้า Report</div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; max-width: 400px">
+              <div style="font-size:0.85rem; font-weight:600; margin-bottom:0.75rem">Export งบกำไรขาดทุน</div>
+              <div style="font-size:0.8rem; color:#64748b; margin-bottom:0.5rem">ช่วงเวลา: ม.ค. 2569 — มี.ค. 2569 (จาก filter หน้า report)</div>
+              <div style="margin-bottom:0.75rem">
+                <div class="pattern-label">รูปแบบไฟล์</div>
+                <div class="format-selector">
+                  <button class="format-btn active">PDF</button>
+                  <button class="format-btn">Excel (.xlsx)</button>
+                </div>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-sm">Export Statement</button>
+                <button class="btn btn-sm btn-outline">Cancel</button>
+              </div>
+            </div>
+
+            <hr class="divider">
+            <div class="pattern-label">VAT / PND — ต้องเลือก month/year เพิ่มเติม</div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; max-width: 400px">
+              <div style="font-size:0.85rem; font-weight:600; margin-bottom:0.75rem">Export VAT Summary</div>
+              <div style="display:flex; gap:0.75rem; margin-bottom:0.75rem; font-size:0.8rem">
+                <div>
+                  <div class="pattern-label">เดือน</div>
+                  <select class="field" style="font-size:0.8rem"><option>เมษายน</option></select>
+                </div>
+                <div>
+                  <div class="pattern-label">ปี (พ.ศ.)</div>
+                  <select class="field" style="font-size:0.8rem"><option>2569</option></select>
+                </div>
+                <div>
+                  <div class="pattern-label">รูปแบบ</div>
+                  <select class="field" style="font-size:0.8rem"><option>PDF</option><option>Excel</option></select>
+                </div>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-sm">Export VAT Summary</button>
+                <button class="btn btn-sm btn-outline">Cancel</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ─── Pattern 4: Sub-flow I — Payslip (row-level + run-level) ─── -->
+          <section class="pattern-section">
+            <h3>Pattern I — Payroll Run Detail: Payslip PDF รายคน + Export ทั้ง run</h3>
+            <p class="text-xs text-muted">I1 = ปุ่มใน table row | I2 = ปุ่ม run-level บน action bar (2 actions อิสระ)</p>
+
+            <div class="pattern-label">Run-level action bar</div>
+            <div class="btn-group" style="margin-bottom: 1rem">
+              <span style="font-size:0.85rem; font-weight:600">Payroll Run: เม.ย. 2569</span>
+              <button class="btn btn-sm" style="margin-left:auto">Export Payslip Bundle</button>
+            </div>
+
+            <!-- Async progress banner -->
+            <div class="progress-banner" style="margin-bottom:1rem">
+              <div class="info">
+                <strong>กำลังสร้าง ZIP payslips…</strong>
+                <span class="text-xs text-muted">คาดว่าจะเสร็จภายใน 2 นาที</span>
+              </div>
+              <span class="badge-inline badge-processing">⏳ processing</span>
+            </div>
+
+            <div class="progress-banner" style="background:#d1fae5; border-color:#6ee7b7; margin-bottom:1rem">
+              <div class="info">
+                <strong>ZIP พร้อมดาวน์โหลดแล้ว</strong>
+                <span class="text-xs text-muted">ลิงก์หมดอายุ: 19 เม.ย. 2569 11:05</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem">
+                <span class="badge-inline badge-done">✅ done</span>
+                <button class="btn btn-sm">Download ZIP</button>
+              </div>
+            </div>
+
+            <div class="pattern-label">Table row — payslip รายบุคคล</div>
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>พนักงาน</th>
+                    <th class="text-right">เงินเดือน</th>
+                    <th class="text-right">หัก</th>
+                    <th class="text-right">สุทธิ</th>
+                    <th>สลิป</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>สมชาย ใจดี</td>
+                    <td class="text-right">45,000</td>
+                    <td class="text-right">2,250</td>
+                    <td class="text-right">42,750</td>
+                    <td>
+                      <div class="table-row-actions">
+                        <button class="btn btn-sm" style="padding:0.2rem 0.6rem; font-size:0.75rem">Download PDF</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>สมหญิง ขยัน</td>
+                    <td class="text-right">38,000</td>
+                    <td class="text-right">1,900</td>
+                    <td class="text-right">36,100</td>
+                    <td>
+                      <div class="table-row-actions">
+                        <button class="btn btn-sm" disabled style="padding:0.2rem 0.6rem; font-size:0.75rem">⏳</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- ─── Global behaviors note ─── -->
+          <section class="pattern-section" style="background:#f8fafc">
+            <h3>Global FE Behaviors — บังคับใช้ทุก sub-flow</h3>
+            <ul class="text-xs" style="margin:0; padding-left:1.25rem; line-height:1.8">
+              <li>ส่ง <code>Authorization: Bearer &lt;token&gt;</code> ทุก request</li>
+              <li>Response เป็น binary (<code>application/pdf</code>, <code>application/zip</code>, <code>.xlsx</code>) → ใช้ <code>blob + URL.createObjectURL</code></li>
+              <li>Response เป็น JSON preview (<code>invoices/:id/preview</code>) → render HTML ใน modal</li>
+              <li>แสดง loading state บนปุ่ม (disabled + spinner) ระหว่างรอ</li>
+              <li>Success → toast ✅ พร้อมชื่อไฟล์</li>
+              <li>Error 401 → redirect login; 403 → toast "ไม่มีสิทธิ์"; 404 → toast "ไม่พบเอกสาร"; 5xx → toast + Retry</li>
+              <li>Async export: poll status endpoint → แสดง progress banner → เมื่อ done แสดงปุ่ม Download</li>
+            </ul>
+          </section>
+
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+        }
+        var dlBtn = document.getElementById("dlBtn");
+        var dlLoading = document.getElementById("dlLoading");
+        if (dlBtn) {
+          dlBtn.addEventListener("click", function () {
+            dlBtn.style.display = "none";
+            dlLoading.style.display = "";
+            setTimeout(function () {
+              dlBtn.style.display = "";
+              dlLoading.style.display = "none";
+            }, 1500);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

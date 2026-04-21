@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — ภาพรวมองค์กร — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      /* Dashboard-specific layout */
+      .dashboard-layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 24px;
+        align-items: start;
+      }
+      .dashboard-main { display: flex; flex-direction: column; gap: 24px; }
+      .dashboard-aside { display: flex; flex-direction: column; gap: 24px; }
+
+      /* Section header row */
+      .section-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .module-label { font-size: 15px; font-weight: 600; margin: 0; }
+
+      /* Drilldown card wrapper */
+      .kpi-drilldown {
+        text-decoration: none;
+        display: block;
+        color: inherit;
+      }
+      .kpi-drilldown .card { transition: border-color 0.15s, box-shadow 0.15s; }
+      .kpi-drilldown:hover .card {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 18%, transparent);
+      }
+
+      /* Alerts panel */
+      .alert-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        flex-wrap: wrap;
+      }
+      .alert-row + .alert-row { border-top: 1px solid var(--border); }
+      .alert-count-num {
+        font-size: 20px;
+        font-weight: 700;
+        min-width: 28px;
+        text-align: center;
+      }
+      .alert-desc { flex: 1; font-size: 13px; color: var(--muted-foreground); min-width: 120px; }
+
+      /* RBAC hidden placeholder */
+      .rbac-notice {
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-xl);
+        padding: 20px 24px;
+        background: color-mix(in srgb, var(--muted) 30%, transparent);
+        color: var(--muted-foreground);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      /* Freshness banner */
+      .freshness-bar {
+        font-size: 12px;
+        color: var(--muted-foreground);
+        margin-top: 4px;
+      }
+
+      /* State toggle (preview banner) */
+      .state-toggle { display: flex; gap: 6px; flex-wrap: wrap; }
+      .state-btn {
+        font-size: 11px; padding: 3px 10px;
+        border: 1px solid var(--border); border-radius: 4px;
+        background: var(--card); color: var(--muted-foreground); cursor: pointer;
+      }
+      .state-btn.active {
+        background: var(--primary); color: var(--primary-foreground); border-color: var(--primary);
+      }
+
+      /* State visibility */
+      [data-state] { display: none; }
+      [data-state].visible { display: block; }
+
+      /* No-alerts empty state */
+      .empty-alerts {
+        padding: 20px 16px; text-align: center;
+        font-size: 13px; color: var(--muted-foreground);
+      }
+
+      /* Progress inside KPI card */
+      .kpi-progress { margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <!-- ─── Preview Banner ─── -->
+    <div class="preview-banner">
+      <span>
+        <strong>Static preview</strong> — GlobalDashboardPage · <code>/dashboard</code> ·
+        <em style="font-weight: 400; opacity: 0.9">
+          Flow ล่าสุด: RBAC ต่อโมดูลจากการมี <code>data.finance</code> / <code>data.hr</code> / <code>data.pm</code> ใน response — ไม่ใช้
+          <code>/api/auth/me</code> ตัดการแสดง widget บนหน้านี้; <code>permissionTrimmedModules</code> ใช้ข้อความเตือนเท่านั้น
+        </em>
+      </span>
+      <span class="state-toggle">
+        <button class="state-btn active" onclick="showState('default',this)">Default</button>
+        <button class="state-btn" onclick="showState('loading',this)">Loading</button>
+        <button class="state-btn" onclick="showState('rbac',this)">RBAC partial</button>
+        <button class="state-btn" onclick="showState('error',this)">Error</button>
+        <button class="state-btn" onclick="showState('empty-alerts',this)">No alerts</button>
+      </span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+
+    <div class="shell">
+      <!-- ─── Sidebar ─── -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">ภาพรวม</div>
+          <a class="nav-link active" href="#">Dashboard</a>
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link" href="#">ใบแจ้งหนี้ / AR</a>
+          <a class="nav-link" href="#">เจ้าหนี้ AP</a>
+          <a class="nav-link" href="#">ลูกค้า</a>
+          <a class="nav-link" href="#">รายงาน</a>
+          <a class="nav-link" href="#">บัญชีธนาคาร</a>
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link" href="#">พนักงาน</a>
+          <a class="nav-link" href="#">ใบลา</a>
+          <a class="nav-link" href="#">OT</a>
+          <a class="nav-link" href="#">เงินเดือน</a>
+          <div class="nav-group-label">โครงการ</div>
+          <a class="nav-link" href="#">PM Dashboard</a>
+          <a class="nav-link" href="#">งบประมาณ</a>
+          <div class="nav-group-label">การแจ้งเตือน</div>
+          <a class="nav-link" href="#">แจ้งเตือน</a>
+        </nav>
+      </aside>
+
+      <div class="col-main">
+        <!-- ─── Header Bar ─── -->
+        <header class="header-bar">
+          <span class="header-title">ภาพรวมองค์กร</span>
+          <div class="header-actions">
+            <span style="font-size:18px;cursor:pointer" title="การแจ้งเตือน">🔔</span>
+            <div class="avatar">A</div>
+          </div>
+        </header>
+
+        <main class="main-content stack-y-6">
+
+          <!-- ─── Page Header (always visible) ─── -->
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">Dashboard — ภาพรวมองค์กร</h1>
+              <p class="freshness-bar" id="freshnessBar">
+                อัปเดตล่าสุด: 16 เม.ย. 2569 · 10:30 น.&nbsp;&nbsp;·&nbsp;&nbsp;ข้อมูลอาจล่าช้าสูงสุด 5 นาที
+              </p>
+              <p class="freshness-bar" style="margin-top: 6px; max-width: 52rem; line-height: 1.45">
+                ลำดับอ่านที่แนะนำ: สแกน <strong>แจ้งเตือน (คอลัมน์ขวา)</strong> ก่อน แล้วค่อยดู KPI การเงิน → HR → โครงการทางซ้าย · Alerts ใช้ <code>router.push(alert.url)</code> ตาม BE (เช่น
+                <code>/finance/reports</code>, <code>/finance/ap</code>, <code>/hr/leaves</code>)
+              </p>
+            </div>
+            <div class="actions">
+              <button class="btn btn-sm">↻ รีเฟรชข้อมูล</button>
+            </div>
+          </div>
+
+          <!-- ══════════════════════════════════════════
+               STATE: DEFAULT
+               ══════════════════════════════════════════ -->
+          <div data-state="default" class="visible">
+            <div class="dashboard-layout">
+
+              <!-- ── Left: Finance · HR · PM sections ── -->
+              <div class="dashboard-main">
+
+                <!-- Finance Section -->
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">💰 การเงิน</h2>
+                    <a href="#" class="link link--md">ดูรายงานการเงิน →</a>
+                  </div>
+                  <div class="grid-4">
+                    <!-- Revenue MTD -->
+                    <a href="#" class="kpi-drilldown" title="ไป /finance/reports">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--primary" aria-hidden="true">↗</div>
+                        <div class="stat-val stat-val--primary">฿850,000</div>
+                        <div class="stat-lbl">รายได้เดือนนี้</div>
+                        <div class="hint">MTD</div>
+                      </div>
+                    </a>
+                    <!-- Revenue YTD -->
+                    <a href="#" class="kpi-drilldown" title="ไป /finance/reports">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--primary" aria-hidden="true">📈</div>
+                        <div class="stat-val">฿3.2M</div>
+                        <div class="stat-lbl">รายได้รวม YTD</div>
+                        <div class="hint">ปีงบประมาณนี้</div>
+                      </div>
+                    </a>
+                    <!-- Expense MTD -->
+                    <a href="#" class="kpi-drilldown" title="ไป /finance/reports">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--accent" aria-hidden="true">↙</div>
+                        <div class="stat-val">฿420,000</div>
+                        <div class="stat-lbl">ค่าใช้จ่ายเดือนนี้</div>
+                        <div class="hint">MTD</div>
+                      </div>
+                    </a>
+                    <!-- Net Profit MTD -->
+                    <a href="#" class="kpi-drilldown" title="ไป /finance/reports">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--success" aria-hidden="true">✓</div>
+                        <div class="stat-val stat-val--success">฿430,000</div>
+                        <div class="stat-lbl">กำไรสุทธิเดือนนี้</div>
+                        <div class="hint">MTD</div>
+                      </div>
+                    </a>
+                    <!-- AR Outstanding -->
+                    <a href="#" class="kpi-drilldown" title="ไป /finance/reports (แท็บ AR aging ถ้า FE รองรับ)">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--warning" aria-hidden="true">⏱</div>
+                        <div class="stat-val stat-val--warn">฿280,000</div>
+                        <div class="stat-lbl">ลูกหนี้ค้างชำระ</div>
+                        <div class="hint">→ AR Aging</div>
+                      </div>
+                    </a>
+                    <!-- AP Overdue Count -->
+                    <a href="#" class="kpi-drilldown" title="ไป /finance/ap">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--warning" aria-hidden="true">!</div>
+                        <div class="stat-val stat-val--destructive">3 รายการ</div>
+                        <div class="stat-lbl">AP ค้างจ่าย</div>
+                        <div class="hint">→ จัดการ AP</div>
+                      </div>
+                    </a>
+                    <!-- Cash Balance — ⚠️ Feature 3.5 dependency: key omitted from payload until bank_accounts table exists; FE shows "—" if key missing -->
+                    <a href="#" class="kpi-drilldown" title="ไป /finance/bank-accounts">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--success" aria-hidden="true">🏦</div>
+                        <div class="stat-val">฿1.25M</div>
+                        <div class="stat-lbl">ยอดเงินสดรวม</div>
+                        <div class="hint">→ บัญชีธนาคาร</div>
+                      </div>
+                    </a>
+                  </div>
+                </section>
+
+                <!-- HR Section -->
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">👥 HR</h2>
+                    <a href="#" class="link link--md">จัดการ HR →</a>
+                  </div>
+                  <div class="grid-4">
+                    <!-- Total Headcount -->
+                    <div class="card card-pad">
+                      <div class="kpi-icon kpi-icon--primary" aria-hidden="true">👤</div>
+                      <div class="stat-val">42</div>
+                      <div class="stat-lbl">พนักงานทั้งหมด</div>
+                      <div class="hint">Active headcount</div>
+                    </div>
+                    <!-- Pending Leave -->
+                    <a href="#" class="kpi-drilldown" title="ไปอนุมัติใบลา">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--warning" aria-hidden="true">📅</div>
+                        <div class="stat-val stat-val--warn">5 รายการ</div>
+                        <div class="stat-lbl">ใบลา รออนุมัติ</div>
+                        <div class="hint">→ อนุมัติใบลา</div>
+                      </div>
+                    </a>
+                    <!-- Pending OT -->
+                    <a href="#" class="kpi-drilldown" title="ไปอนุมัติ OT">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--warning" aria-hidden="true">⏰</div>
+                        <div class="stat-val stat-val--warn">2 รายการ</div>
+                        <div class="stat-lbl">OT รออนุมัติ</div>
+                        <div class="hint">→ อนุมัติ OT</div>
+                      </div>
+                    </a>
+                    <!-- Next Payroll Date -->
+                    <a href="#" class="kpi-drilldown" title="ไปหน้าเงินเดือน">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--accent" aria-hidden="true">💰</div>
+                        <div class="stat-val" style="font-size:1.1rem">30 เม.ย. 69</div>
+                        <div class="stat-lbl">รอบเงินเดือนถัดไป</div>
+                        <div class="hint">→ จัดการเงินเดือน</div>
+                      </div>
+                    </a>
+                  </div>
+                </section>
+
+                <!-- PM Section -->
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">📋 โครงการ</h2>
+                    <a href="#" class="link link--md">ดู PM Dashboard →</a>
+                  </div>
+                  <div class="grid-4">
+                    <!-- Active Budgets -->
+                    <a href="#" class="kpi-drilldown" title="ไปหน้างบประมาณ">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--primary" aria-hidden="true">$</div>
+                        <div class="stat-val">8</div>
+                        <div class="stat-lbl">งบประมาณ Active</div>
+                        <div class="hint">→ ดู Budgets</div>
+                      </div>
+                    </a>
+                    <!-- Tasks In Progress -->
+                    <a href="#" class="kpi-drilldown" title="ไปหน้า Task List">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--accent" aria-hidden="true">▶</div>
+                        <div class="stat-val">23</div>
+                        <div class="stat-lbl">งานกำลังดำเนินการ</div>
+                        <div class="hint">→ Task list</div>
+                      </div>
+                    </a>
+                    <!-- Tasks Overdue -->
+                    <a href="#" class="kpi-drilldown" title="ไปหน้า Overdue Tasks">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--warning" aria-hidden="true">⚠</div>
+                        <div class="stat-val stat-val--destructive">4</div>
+                        <div class="stat-lbl">งานค้าง (Overdue)</div>
+                        <div class="hint">→ ดู overdue tasks</div>
+                      </div>
+                    </a>
+                    <!-- Avg Budget Utilization -->
+                    <a href="#" class="kpi-drilldown" title="ไป /pm/budgets หรือ /pm/dashboard">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--success" aria-hidden="true">%</div>
+                        <div class="stat-val">62%</div>
+                        <div class="stat-lbl">การใช้งบ Avg.</div>
+                        <div class="progress progress--xs kpi-progress">
+                          <span style="width:62%"></span>
+                        </div>
+                      </div>
+                    </a>
+                  </div>
+                </section>
+
+              </div><!-- /.dashboard-main -->
+
+              <!-- ── Right: Alerts Panel ── -->
+              <div class="dashboard-aside">
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">⚠ แจ้งเตือนสำคัญ</h2>
+                  </div>
+                  <div class="card">
+                    <!-- Alert: Invoice overdue -->
+                    <div class="alert-row">
+                      <div style="flex:1">
+                        <span class="badge badge-danger" style="margin-bottom:4px">Invoice overdue</span>
+                        <div class="font-medium" style="font-size:13px">ใบแจ้งหนี้เกินกำหนด</div>
+                        <div class="hint hint--tight">ลูกหนี้ค้างชำระเกินวันครบกำหนด</div>
+                      </div>
+                      <div style="text-align:right">
+                        <div class="alert-count-num stat-val--destructive">3</div>
+                        <a href="#" class="link" style="white-space:nowrap" title="ตัวอย่าง BE: /finance/reports">ดูรายงาน →</a>
+                      </div>
+                    </div>
+                    <!-- Alert: AP overdue -->
+                    <div class="alert-row">
+                      <div style="flex:1">
+                        <span class="badge badge-danger" style="margin-bottom:4px">AP overdue</span>
+                        <div class="font-medium" style="font-size:13px">เจ้าหนี้ค้างชำระ</div>
+                        <div class="hint hint--tight">ค่าใช้จ่ายที่ยังไม่ได้จ่ายเกินกำหนด</div>
+                      </div>
+                      <div style="text-align:right">
+                        <div class="alert-count-num stat-val--destructive">2</div>
+                        <a href="#" class="link" style="white-space:nowrap" title="ตัวอย่าง BE: /finance/ap">จัดการ AP →</a>
+                      </div>
+                    </div>
+                    <!-- Alert: Leave pending -->
+                    <div class="alert-row">
+                      <div style="flex:1">
+                        <span class="badge badge-warn" style="margin-bottom:4px">Leave pending</span>
+                        <div class="font-medium" style="font-size:13px">ใบลา รออนุมัติ</div>
+                        <div class="hint hint--tight">ใบลาพนักงานที่รออนุมัติ</div>
+                      </div>
+                      <div style="text-align:right">
+                        <div class="alert-count-num stat-val--warn">5</div>
+                        <a href="#" class="link" style="white-space:nowrap" title="ตัวอย่าง BE: /hr/leaves">อนุมัติ →</a>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div><!-- /.dashboard-aside -->
+
+            </div><!-- /.dashboard-layout -->
+          </div>
+          <!-- ══ END DEFAULT ══ -->
+
+          <!-- ══════════════════════════════════════════
+               STATE: LOADING (skeleton shimmer)
+               ══════════════════════════════════════════ -->
+          <div data-state="loading">
+            <div class="dashboard-layout">
+              <div class="dashboard-main stack-y-6">
+                <!-- Finance skeleton -->
+                <section>
+                  <div class="section-header-row">
+                    <div class="skeleton-line" style="width:100px;height:15px"></div>
+                  </div>
+                  <div class="grid-4">
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:55%"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:55%"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:55%"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:55%"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                  </div>
+                </section>
+                <!-- HR skeleton -->
+                <section>
+                  <div class="section-header-row">
+                    <div class="skeleton-line" style="width:60px;height:15px"></div>
+                  </div>
+                  <div class="grid-4">
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                  </div>
+                </section>
+                <!-- PM skeleton -->
+                <section>
+                  <div class="section-header-row">
+                    <div class="skeleton-line" style="width:80px;height:15px"></div>
+                  </div>
+                  <div class="grid-4">
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                    <div class="card card-pad skeleton-stack">
+                      <div class="skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton-line" style="width:70%"></div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <!-- Alerts skeleton -->
+              <div class="dashboard-aside">
+                <section>
+                  <div class="section-header-row">
+                    <div class="skeleton-line" style="width:130px;height:15px"></div>
+                  </div>
+                  <div class="card card-pad skeleton-stack">
+                    <div class="skeleton-line" style="height:52px"></div>
+                    <div class="skeleton-line" style="height:52px"></div>
+                    <div class="skeleton-line" style="height:52px"></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+          <!-- ══ END LOADING ══ -->
+
+          <!-- ══════════════════════════════════════════
+               STATE: RBAC PARTIAL
+               (Finance + PM omitted; HR only)
+               ══════════════════════════════════════════ -->
+          <div data-state="rbac">
+            <div class="alert-warn" style="margin-bottom:16px;font-size:13px">
+              ⚠ Payload ไม่มี <code>data.finance</code> และ <code>data.pm</code> — จึงไม่แสดง KPI สองโมดูลนี้
+              · แบนเนอร์อ้าง <code>permissionTrimmedModules: ["finance","pm"]</code> เพื่ออธิบายเท่านั้น (ไม่ใช้
+              <code>/api/auth/me</code> ตัดสินบนหน้านี้)
+            </div>
+            <div class="dashboard-layout">
+              <div class="dashboard-main stack-y-6">
+                <!-- Finance: omitted -->
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">💰 การเงิน</h2>
+                  </div>
+                  <div class="rbac-notice">
+                    ไม่มีสิทธิ์ดูข้อมูลโมดูล Finance — ติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์
+                  </div>
+                </section>
+                <!-- HR: shown normally -->
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">👥 HR</h2>
+                    <a href="#" class="link link--md">จัดการ HR →</a>
+                  </div>
+                  <div class="grid-4">
+                    <div class="card card-pad">
+                      <div class="kpi-icon kpi-icon--primary">👤</div>
+                      <div class="stat-val">42</div>
+                      <div class="stat-lbl">พนักงานทั้งหมด</div>
+                    </div>
+                    <a href="#" class="kpi-drilldown">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--warning">📅</div>
+                        <div class="stat-val stat-val--warn">5 รายการ</div>
+                        <div class="stat-lbl">ใบลา รออนุมัติ</div>
+                      </div>
+                    </a>
+                    <a href="#" class="kpi-drilldown">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--warning">⏰</div>
+                        <div class="stat-val stat-val--warn">2 รายการ</div>
+                        <div class="stat-lbl">OT รออนุมัติ</div>
+                      </div>
+                    </a>
+                    <a href="#" class="kpi-drilldown">
+                      <div class="card card-pad">
+                        <div class="kpi-icon kpi-icon--accent">💰</div>
+                        <div class="stat-val" style="font-size:1.1rem">30 เม.ย. 69</div>
+                        <div class="stat-lbl">รอบเงินเดือนถัดไป</div>
+                      </div>
+                    </a>
+                  </div>
+                </section>
+                <!-- PM: omitted -->
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">📋 โครงการ</h2>
+                  </div>
+                  <div class="rbac-notice">
+                    ไม่มีสิทธิ์ดูข้อมูลโมดูล PM — ติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์
+                  </div>
+                </section>
+              </div>
+              <!-- Alerts: HR only -->
+              <div class="dashboard-aside">
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">⚠ แจ้งเตือนสำคัญ</h2>
+                  </div>
+                  <div class="card">
+                    <div class="alert-row">
+                      <div style="flex:1">
+                        <span class="badge badge-warn" style="margin-bottom:4px">Leave pending</span>
+                        <div class="font-medium" style="font-size:13px">ใบลา รออนุมัติ</div>
+                        <div class="hint hint--tight">ใบลาพนักงานที่รออนุมัติ</div>
+                      </div>
+                      <div style="text-align:right">
+                        <div class="alert-count-num stat-val--warn">5</div>
+                        <a href="#" class="link" style="white-space:nowrap" title="ตัวอย่าง BE: /hr/leaves">อนุมัติ →</a>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+          <!-- ══ END RBAC ══ -->
+
+          <!-- ══════════════════════════════════════════
+               STATE: ERROR
+               ══════════════════════════════════════════ -->
+          <div data-state="error">
+            <div class="alert-error" style="margin-bottom:16px">
+              <strong>โหลดข้อมูล Dashboard ไม่สำเร็จ</strong> — ไม่สามารถเชื่อมต่อ API ได้
+              (<code>GET /api/dashboard/summary → 500</code>)
+            </div>
+            <button class="btn btn-primary">↻ ลองโหลดใหม่</button>
+          </div>
+          <!-- ══ END ERROR ══ -->
+
+          <!-- ══════════════════════════════════════════
+               STATE: NO ALERTS (empty alerts panel)
+               ══════════════════════════════════════════ -->
+          <div data-state="empty-alerts">
+            <div class="dashboard-layout">
+              <div class="dashboard-main">
+                <!-- Finance (same as default) -->
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">💰 การเงิน</h2>
+                    <a href="#" class="link link--md">ดูรายงานการเงิน →</a>
+                  </div>
+                  <div class="grid-4">
+                    <div class="card card-pad">
+                      <div class="kpi-icon kpi-icon--primary">↗</div>
+                      <div class="stat-val stat-val--primary">฿850,000</div>
+                      <div class="stat-lbl">รายได้เดือนนี้</div>
+                    </div>
+                    <div class="card card-pad">
+                      <div class="kpi-icon kpi-icon--primary">📈</div>
+                      <div class="stat-val">฿3.2M</div>
+                      <div class="stat-lbl">รายได้รวม YTD</div>
+                    </div>
+                    <div class="card card-pad">
+                      <div class="kpi-icon kpi-icon--success">✓</div>
+                      <div class="stat-val stat-val--success">฿430,000</div>
+                      <div class="stat-lbl">กำไรสุทธิเดือนนี้</div>
+                    </div>
+                    <div class="card card-pad">
+                      <div class="kpi-icon kpi-icon--success">🏦</div>
+                      <div class="stat-val">฿1.25M</div>
+                      <div class="stat-lbl">ยอดเงินสดรวม</div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <!-- Alerts: empty -->
+              <div class="dashboard-aside">
+                <section>
+                  <div class="section-header-row">
+                    <h2 class="module-label">⚠ แจ้งเตือนสำคัญ</h2>
+                  </div>
+                  <div class="card">
+                    <div class="empty-alerts">
+                      ✅ ไม่มีเรื่องเร่งด่วนในขณะนี้
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+          <!-- ══ END EMPTY ALERTS ══ -->
+
+        </main>
+      </div>
+    </div><!-- /.shell -->
+
+    <script>
+      (function () {
+        function showState(name, btn) {
+          document.querySelectorAll('[data-state]').forEach(function (el) {
+            el.classList.toggle('visible', el.dataset.state === name);
+          });
+          document.querySelectorAll('.state-btn').forEach(function (b) {
+            b.classList.remove('active');
+          });
+          if (btn) btn.classList.add('active');
+          var fb = document.getElementById('freshnessBar');
+          if (fb) fb.style.display = name === 'error' ? 'none' : '';
+        }
+        window.showState = showState;
+
+        // Init dark mode
+        var dm = document.getElementById('previewDarkMode');
+        if (dm) {
+          dm.addEventListener('change', function () {
+            document.documentElement.classList.toggle('dark', dm.checked);
+          });
+        }
+
+        // Init state visibility (default already set via class in HTML; re-run for safety)
+        showState('default', document.querySelector('.state-btn.active'));
+      })();
+    </script>
+  </body>
+</html>

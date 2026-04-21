@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings — สร้าง Role — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — สร้าง custom role · ไม่เชื่อม API</span>
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">Settings</div>
+          <a class="nav-link" href="#">Users</a>
+          <a class="nav-link active" href="#">Roles</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">สร้าง Role</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content max-w-3xl stack-y-4">
+          <div class="breadcrumb"><a href="#">Roles</a> / สร้าง role ใหม่</div>
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">สร้าง role ใหม่</h1>
+              <p class="text-muted">Custom role เท่านั้น (`isSystem=false`)</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">ข้อมูล role</div>
+            <div class="card-body">
+              <div class="grid-2">
+                <div class="field" style="grid-column: 1 / -1">
+                  <span class="label">ชื่อ role *</span>
+                  <input class="input" placeholder="เช่น project_viewer" />
+                  <span class="hint">ตรวจชื่อซ้ำที่เซิร์ฟเวอร์ (409)</span>
+                </div>
+                <div class="field" style="grid-column: 1 / -1">
+                  <span class="label">คำอธิบาย</span>
+                  <textarea class="input" rows="3" placeholder="อธิบายขอบเขตการใช้งาน"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-row flex-end">
+            <button type="button" class="btn">ยกเลิก</button>
+            <button type="button" class="btn btn-primary">สร้าง role</button>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById("previewDarkMode");
+        if (!el) return;
+        function s() {
+          document.documentElement.classList.toggle("dark", el.checked);
+        }
+        el.addEventListener("change", s);
+        s();
+      })();
+    </script>
+  </body>
+</html>

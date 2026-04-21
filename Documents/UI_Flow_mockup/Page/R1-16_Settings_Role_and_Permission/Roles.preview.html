@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings — Roles — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span
+        ><strong>Static preview</strong> — Roles: รายการ + matrix (ลิงก์ไป mock สร้าง/ลบ)</span
+      >
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">Settings</div>
+          <a class="nav-link" href="#">Users</a>
+          <a class="nav-link active" href="#">Roles</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">Roles &amp; Permissions</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-4">
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">Roles</h1>
+              <p class="text-muted">รายการ role, กรอง/ค้นหา, สร้าง–ลบ (custom), แล้วจึง matrix สิทธิ์</p>
+            </div>
+            <div class="actions">
+              <a class="btn btn-primary btn-sm" href="./RoleCreate.preview.html">+ สร้าง role</a>
+            </div>
+          </div>
+
+          <div class="card card-pad stack-y-3">
+            <div class="flex-between flex-wrap" style="gap: 12px">
+              <div class="field" style="margin: 0; flex: 1; min-width: 200px">
+                <span class="label">ค้นหาชื่อ role</span>
+                <input class="input" type="search" placeholder="เช่น admin, viewer…" />
+              </div>
+              <div class="field" style="margin: 0; min-width: 160px">
+                <span class="label">ประเภท</span>
+                <select class="text-input">
+                  <option>ทั้งหมด</option>
+                  <option>System</option>
+                  <option>Custom</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap table-wrap--flush">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>ประเภท</th>
+                    <th class="text-center"># permissions</th>
+                    <th>การทำงาน</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-mono">super_admin</td>
+                    <td><span class="badge">System</span></td>
+                    <td class="text-center">42</td>
+                    <td>
+                      <span class="text-muted text-xs">ห้ามแก้ไข/ลบ</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-mono">hr_admin</td>
+                    <td><span class="badge">System</span></td>
+                    <td class="text-center">18</td>
+                    <td>
+                      <span class="text-muted text-xs">ห้ามแก้ไข/ลบ</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-mono">project_viewer</td>
+                    <td><span class="badge badge-success">Custom</span></td>
+                    <td class="text-center">6</td>
+                    <td>
+                      <div class="actions" style="justify-content: flex-start">
+                        <button type="button" class="btn btn-ghost btn-sm">แก้ไข</button>
+                        <button type="button" class="btn btn-sm">Matrix</button>
+                        <a class="btn btn-danger btn-sm" href="./RoleDelete.preview.html">ลบ</a>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-mono">staff</td>
+                    <td><span class="badge badge-success">Custom</span></td>
+                    <td class="text-center">4</td>
+                    <td>
+                      <div class="actions" style="justify-content: flex-start">
+                        <button type="button" class="btn btn-ghost btn-sm">แก้ไข</button>
+                        <button type="button" class="btn btn-sm">Matrix</button>
+                        <a class="btn btn-danger btn-sm" href="./RoleDelete.preview.html">ลบ</a>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="hint hint--tight mb-0">
+              ปุ่ม <strong>ลบ</strong> เปิด mock โมดัลที่
+              <a href="./RoleDelete.preview.html">RoleDelete.preview.html</a> · ปุ่ม <strong>+ สร้าง role</strong> ไปที่
+              <a href="./RoleCreate.preview.html">RoleCreate.preview.html</a>
+            </p>
+          </div>
+
+          <div class="card card-pad">
+            <h2 class="m-0" style="font-size: 1rem; font-weight: 600">Permission matrix</h2>
+            <p class="hint hint--tight">super_admin ล็อกไม่ให้แก้ checkbox</p>
+            <div class="table-wrap table-wrap--flush">
+              <table class="data table-min-w-520">
+                <thead>
+                  <tr>
+                    <th class="sticky-left th-sticky">Permission</th>
+                    <th class="text-center">super_admin</th>
+                    <th class="text-center">hr_admin</th>
+                    <th class="text-center text-mono">project_viewer</th>
+                    <th class="text-center text-mono">staff</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-mono sticky-left td-sticky">hr:employee:view</td>
+                    <td class="text-center"><input type="checkbox" checked disabled /></td>
+                    <td class="text-center"><input type="checkbox" checked /></td>
+                    <td class="text-center"><input type="checkbox" checked /></td>
+                    <td class="text-center"><input type="checkbox" /></td>
+                  </tr>
+                  <tr>
+                    <td class="text-mono sticky-left td-sticky">finance:invoice:create</td>
+                    <td class="text-center"><input type="checkbox" checked disabled /></td>
+                    <td class="text-center"><input type="checkbox" /></td>
+                    <td class="text-center"><input type="checkbox" /></td>
+                    <td class="text-center"><input type="checkbox" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="hint mb-0">กำลังบันทึก… (แสดงเมื่อมี mutation ในแอปจริง)</p>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById("previewDarkMode");
+        if (!el) return;
+        function s() {
+          document.documentElement.classList.toggle("dark", el.checked);
+        }
+        el.addEventListener("change", s);
+        s();
+      })();
+    </script>
+  </body>
+</html>

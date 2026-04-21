@@ -1,0 +1,50 @@
+sequenceDiagram
+    title 2. Expense Records - Submit and Approval Flow
+
+    actor Staff as Requester
+    participant API as Expense API
+    participant DB as Database
+    participant Mgr as Manager
+    participant Finance as Finance Team
+
+    %% Step 1: Create Expense Draft
+    Staff->>API: POST /expenses
+    Note over Staff,API: expense_name, budget_id=BDG-001, amount_thb=12000
+    API->>DB: CHECK budget exists and status=Active
+    DB-->>API: Budget Active confirmed
+    API->>DB: CHECK amount within remaining budget
+    DB-->>API: 500000 remaining confirmed
+    API->>DB: INSERT expense status=Draft
+    DB-->>API: expense_id=EXP-001
+    API-->>Staff: 201 Created expense_id=EXP-001 status=Draft
+
+    %% Step 2: Submit for Approval
+    Staff->>API: PATCH /expenses/EXP-001/status
+    Note over Staff,API: status=Pending Approval
+    API->>DB: UPDATE status=Pending Approval
+    DB-->>API: OK
+    API-->>Mgr: Notify - Expense pending approval
+
+    %% Step 3a: Manager Approves
+    Mgr->>API: PATCH /expenses/EXP-001/status
+    Note over Mgr,API: status=Approved, approved_by=สมศักดิ์
+    API->>DB: UPDATE status=Approved, set approved_by
+    DB-->>API: OK
+    API-->>Finance: Notify - Ready to pay
+    API-->>Staff: 200 OK status=Approved
+
+    %% Step 3b: Alternative - Manager Rejects
+    Note over Mgr,DB: Alternative Path - Manager rejects
+    Mgr-->>API: PATCH /expenses/EXP-001/status
+    Note over Mgr,API: status=Rejected, reason=เกินวงเงิน
+    API->>DB: UPDATE status=Rejected
+    API-->>Staff: 200 OK status=Rejected
+
+    %% Step 4: Finance Marks as Paid
+    Finance->>API: PATCH /expenses/EXP-001/status
+    Note over Finance,API: status=Paid
+    API->>DB: UPDATE status=Paid
+    API->>DB: UPDATE budget spent_amount add 12000
+    DB-->>API: OK
+    API-->>Staff: 200 OK status=Paid
+    Note over Staff,DB: Remaining budget auto-updated

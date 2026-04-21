@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>จัดซื้อ — รายละเอียด PO — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      .badge-approved  { background:#d1fae5; color:#065f46; }
+      .badge-submitted { background:#dbeafe; color:#1d4ed8; }
+      .badge-partial   { background:#fef3c7; color:#92400e; }
+      .tabs { display:flex; gap:0; border-bottom:2px solid #e2e8f0; margin-bottom:1rem; }
+      .tab  { padding:0.5rem 1.25rem; font-size:0.875rem; cursor:pointer; color:#64748b; border-bottom:2px solid transparent; margin-bottom:-2px; }
+      .tab.active { color:#7c3aed; border-bottom-color:#7c3aed; font-weight:600; }
+      .info-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; }
+      .info-item .lbl { font-size:0.75rem; color:#94a3b8; margin-bottom:2px; }
+      .info-item .val { font-size:0.875rem; font-weight:500; }
+      .progress-bar-wrap { background:#e2e8f0; border-radius:4px; height:6px; width:80px; display:inline-block; vertical-align:middle; }
+      .progress-bar-fill { background:#7c3aed; height:100%; border-radius:4px; }
+      .warn-box { background:#fef3c7; border:1px solid #fbbf24; border-radius:6px; padding:0.5rem 0.75rem; font-size:0.8rem; color:#78350f; }
+      .match-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; }
+      .match-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.75rem; text-align:center; }
+      .match-card .mc-label { font-size:0.7rem; color:#94a3b8; margin-bottom:4px; }
+      .match-card .mc-val   { font-size:1rem; font-weight:600; color:#1e293b; }
+      .match-card .mc-sub   { font-size:0.7rem; color:#64748b; margin-top:2px; }
+    </style>
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — PurchaseOrderDetailPage (status: approved)</span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">จัดซื้อ</div>
+          <a class="nav-link active" href="#">ใบสั่งซื้อ</a>
+          <a class="nav-link" href="#">ใบรับสินค้า</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">
+            <a href="#" class="link" style="font-weight:400;color:#94a3b8;">ใบสั่งซื้อ</a>
+            <span style="color:#94a3b8;margin:0 4px;">/</span>
+            PO-2568-010
+          </span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content stack-y-6">
+
+          <!-- Page header: title + status + actions -->
+          <div class="page-header" style="align-items:flex-start;">
+            <div>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
+                <h1 class="m-0">PO-2568-010</h1>
+                <span class="badge badge-approved">approved</span>
+              </div>
+              <div style="font-size:0.8rem;color:#64748b;">สร้างโดย: Apinya W. · 02/04/2568</div>
+            </div>
+            <!-- Context-aware actions for "approved" status -->
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary btn-sm">+ สร้างใบรับสินค้า</button>
+              <button type="button" class="btn btn-sm">ดาวน์โหลด PDF</button>
+              <button type="button" class="btn btn-sm" style="color:#dc2626;border-color:#fca5a5;">ยกเลิก PO</button>
+            </div>
+          </div>
+
+          <!-- Info card -->
+          <div class="card card-pad">
+            <div class="info-grid">
+              <div class="info-item"><div class="lbl">ผู้ขาย</div><div class="val">Supplier A Co., Ltd.</div></div>
+              <div class="info-item"><div class="lbl">วันที่สั่ง</div><div class="val">02/04/2568</div></div>
+              <div class="info-item"><div class="lbl">กำหนดส่ง</div><div class="val">20/04/2568</div></div>
+              <div class="info-item"><div class="lbl">แผนก</div><div class="val">ฝ่ายผลิต</div></div>
+              <div class="info-item"><div class="lbl">งบโครงการ</div><div class="val"><a href="#" class="link">PROJ-2025-003</a></div></div>
+              <div class="info-item"><div class="lbl">อนุมัติโดย</div><div class="val">Somchai P. · 05/04/2568</div></div>
+            </div>
+            <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #f1f5f9;">
+              <div class="lbl" style="font-size:0.75rem;color:#94a3b8;">หมายเหตุ</div>
+              <div style="font-size:0.875rem;color:#475569;">ชิ้นส่วนสำหรับไลน์ผลิต Q2 — ต้องการก่อน 20 เม.ย.</div>
+            </div>
+          </div>
+
+          <!-- 3-way matching summary -->
+          <div class="match-grid">
+            <div class="match-card">
+              <div class="mc-label">ยอด PO</div>
+              <div class="mc-val">฿45,000</div>
+              <div class="mc-sub">3 รายการ</div>
+            </div>
+            <div class="match-card">
+              <div class="mc-label">รับสินค้าแล้ว</div>
+              <div class="mc-val" style="color:#d97706;">฿18,000</div>
+              <div class="mc-sub">40% ของ PO</div>
+            </div>
+            <div class="match-card">
+              <div class="mc-label">AP Bills ที่ผูก</div>
+              <div class="mc-val" style="color:#7c3aed;">฿18,000</div>
+              <div class="mc-sub">1 บิล · ตรงกับ GR ✓</div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div>
+            <div class="tabs">
+              <div class="tab active">รายการสินค้า</div>
+              <div class="tab">ใบรับสินค้า (GR) <span style="background:#7c3aed;color:#fff;border-radius:9px;padding:1px 7px;font-size:0.7rem;margin-left:4px;">2</span></div>
+              <div class="tab">ใบแจ้งหนี้ AP <span style="background:#7c3aed;color:#fff;border-radius:9px;padding:1px 7px;font-size:0.7rem;margin-left:4px;">1</span></div>
+            </div>
+
+            <!-- Tab: รายการสินค้า -->
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>รายการ</th>
+                    <th class="text-right">จำนวน</th>
+                    <th>หน่วย</th>
+                    <th class="text-right">ราคา/หน่วย</th>
+                    <th class="text-right">ยอด</th>
+                    <th class="text-right">รับแล้ว</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-muted text-xs">1</td>
+                    <td>ชิ้นส่วน A</td>
+                    <td class="text-right">100</td>
+                    <td>ชิ้น</td>
+                    <td class="text-right">฿150</td>
+                    <td class="text-right">฿15,000</td>
+                    <td class="text-right">
+                      40
+                      <div class="progress-bar-wrap" title="40/100"><div class="progress-bar-fill" style="width:40%;"></div></div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted text-xs">2</td>
+                    <td>ชิ้นส่วน B</td>
+                    <td class="text-right">50</td>
+                    <td>ชิ้น</td>
+                    <td class="text-right">฿400</td>
+                    <td class="text-right">฿20,000</td>
+                    <td class="text-right">
+                      0
+                      <div class="progress-bar-wrap" title="0/50"><div class="progress-bar-fill" style="width:0%;"></div></div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted text-xs">3</td>
+                    <td>น้ำมันหล่อลื่น</td>
+                    <td class="text-right">20</td>
+                    <td>ลิตร</td>
+                    <td class="text-right">฿500</td>
+                    <td class="text-right">฿10,000</td>
+                    <td class="text-right">
+                      20
+                      <div class="progress-bar-wrap" title="20/20"><div class="progress-bar-fill" style="width:100%;background:#059669;"></div></div>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="5" class="text-right text-muted text-xs">ยอดรวม</td>
+                    <td class="text-right font-medium">฿45,000</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+          document.documentElement.classList.toggle("dark", d.checked);
+        }
+        // Tab switching demo
+        document.querySelectorAll(".tab").forEach(function(tab) {
+          tab.addEventListener("click", function() {
+            document.querySelectorAll(".tab").forEach(function(t){ t.classList.remove("active"); });
+            tab.classList.add("active");
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

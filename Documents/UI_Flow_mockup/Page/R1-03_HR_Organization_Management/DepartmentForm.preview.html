@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HR — ฟอร์มแผนก — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — DepartmentFormModal · ตาม MD_TO_PREVIEW_HTML_MANUAL</span>
+      <a href="../MD_TO_PREVIEW_HTML_MANUAL.md" class="text-muted" style="font-size: 12px">คู่มือแปลง MD→HTML</a>
+    </div>
+    <div class="shell" style="filter: brightness(0.92)">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link active" href="#">แผนก &amp; ตำแหน่ง</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">องค์กร</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-4">
+          <div class="control-panel" style="max-width: 420px">
+            <h2>Preview controls</h2>
+            <label class="control-row">
+              <input type="radio" name="deptMode" id="modeCreate" checked />
+              <span>โหมดสร้าง</span>
+            </label>
+            <label class="control-row">
+              <input type="radio" name="deptMode" id="modeEdit" />
+              <span>โหมดแก้ไข</span>
+            </label>
+            <label class="control-row">
+              <input type="checkbox" id="showError" />
+              <span>แสดงข้อผิดพลาด (409)</span>
+            </label>
+            <label class="control-row">
+              <input type="checkbox" id="previewDarkMode" />
+              <span>Dark mode</span>
+            </label>
+          </div>
+          <div class="page-header">
+            <h1 class="m-0">องค์กร</h1>
+          </div>
+          <p class="text-muted" style="margin: 0; font-size: 12px">พื้นหลังจำลองหน้า Organization — โฟกัสที่โมดัล</p>
+        </main>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" role="presentation">
+      <div class="modal-dialog modal-dialog--wide" role="dialog" aria-modal="true" aria-labelledby="deptFormTitle">
+        <div class="modal-dialog__head">
+          <h1 id="deptFormTitle">เพิ่มแผนก</h1>
+        </div>
+        <div class="modal-dialog__body stack-y-4">
+          <p class="error-text" id="deptErr" hidden>รหัสแผนกนี้มีในระบบแล้ว (409)</p>
+          <div class="grid-2">
+            <div class="field">
+              <span class="label">รหัสแผนก *</span>
+              <input class="input text-mono" id="fCode" placeholder="เช่น D003" />
+            </div>
+            <div class="field">
+              <span class="label">ชื่อแผนก *</span>
+              <input class="input" id="fName" placeholder="เช่น ฝ่ายการตลาด" />
+            </div>
+            <div class="field">
+              <span class="label">แผนกแม่</span>
+              <select class="text-input" id="fParent">
+                <option value="">— ไม่มี (ระดับบนสุด) —</option>
+                <option>D001 ฝ่ายขาย</option>
+                <option>D002 ฝ่ายบัญชี</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="label">ผู้จัดการแผนก</span>
+              <select class="text-input" id="fMgr">
+                <option value="">— ยังไม่ระบุ —</option>
+                <option>EMP-01 สมชาย ใจดี</option>
+                <option>EMP-04 วิภา รักงาน</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-dialog__foot">
+          <button type="button" class="btn btn-sm">ยกเลิก</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnSave">บันทึกแผนก</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var dark = document.getElementById("previewDarkMode");
+        var create = document.getElementById("modeCreate");
+        var edit = document.getElementById("modeEdit");
+        var err = document.getElementById("showError");
+        var title = document.getElementById("deptFormTitle");
+        var code = document.getElementById("fCode");
+        var btnSave = document.getElementById("btnSave");
+        var deptErr = document.getElementById("deptErr");
+
+        function applyDark() {
+          if (dark) document.documentElement.classList.toggle("dark", dark.checked);
+        }
+        if (dark) {
+          dark.addEventListener("change", applyDark);
+          applyDark();
+        }
+
+        function applyMode() {
+          var isEdit = edit && edit.checked;
+          if (title) title.textContent = isEdit ? "แก้ไขแผนก" : "เพิ่มแผนก";
+          if (code) {
+            code.disabled = isEdit;
+            if (isEdit) code.value = "D001";
+            else code.value = "";
+          }
+          if (btnSave) btnSave.textContent = isEdit ? "บันทึกการเปลี่ยนแปลง" : "บันทึกแผนก";
+        }
+        if (create) create.addEventListener("change", applyMode);
+        if (edit) edit.addEventListener("change", applyMode);
+        applyMode();
+
+        function applyErr() {
+          if (deptErr) deptErr.hidden = !err || !err.checked;
+        }
+        if (err) {
+          err.addEventListener("change", applyErr);
+          applyErr();
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PM — ฟอร์ม Budget — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — BudgetFormPage</span>
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">PM</div>
+          <a class="nav-link active" href="#">Budget</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">สร้าง Budget</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content max-w-2xl stack-y-4">
+          <div class="breadcrumb"><a href="#">รายการ Budget</a> / สร้าง</div>
+          <h1 class="page-h1">สร้าง Budget</h1>
+          <div class="card">
+            <div class="card-head">ข้อมูล Budget</div>
+            <div class="card-body grid-2">
+              <div class="field field-span-full">
+                <span class="label">รหัส (auto)</span>
+                <input class="input" disabled value="Auto-generate after create" />
+              </div>
+              <div class="field">
+                <span class="label">ประเภท *</span>
+                <input class="input" placeholder="CAPEX" />
+              </div>
+              <div class="field field-span-full">
+                <span class="label">ชื่อโปรเจค *</span>
+                <input class="input" />
+              </div>
+              <div class="field">
+                <span class="label">ยอดรวม *</span>
+                <input class="input" placeholder="1000000" />
+              </div>
+              <div class="field">
+                <span class="label">ผู้รับผิดชอบ *</span>
+                <input class="input" />
+              </div>
+              <div class="field">
+                <span class="label">เริ่ม *</span>
+                <input class="input" type="date" />
+              </div>
+              <div class="field">
+                <span class="label">สิ้นสุด *</span>
+                <input class="input" type="date" />
+              </div>
+            </div>
+          </div>
+          <div class="flex-row flex-end">
+            <button type="button" class="btn">ยกเลิก</button>
+            <button type="button" class="btn btn-primary">บันทึก</button>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById("previewDarkMode");
+        if (!el) return;
+        function s() {
+          document.documentElement.classList.toggle("dark", el.checked);
+        }
+        el.addEventListener("change", s);
+        s();
+      })();
+    </script>
+  </body>
+</html>

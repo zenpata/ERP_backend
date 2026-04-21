@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance — บัญชีแยกประเภท รายรับรายจ่าย — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — IncomeExpenseLedgerPage</span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link active" href="#">บัญชีแยกประเภท</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">รายรับ–รายจ่าย</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">Ledger ตามบัญชี</h1>
+          </div>
+
+          <div class="card card-pad flex-row filter-toolbar--tight">
+            <select class="text-input" style="min-width: 12rem">
+              <option>4-4100 — รายได้จากการขาย</option>
+              <option>5-5200 — ค่าใช้จ่าย</option>
+            </select>
+            <input class="input" type="date" />
+            <span class="text-muted">ถึง</span>
+            <input class="input" type="date" />
+            <button type="button" class="btn btn-primary btn-sm">โหลด</button>
+            <button type="button" class="btn btn-sm">Export</button>
+          </div>
+
+          <div class="grid-2 card card-pad">
+            <div>
+              <div class="text-muted text-xs">ยอดยกมา</div>
+              <div class="font-medium">฿120,000.00</div>
+            </div>
+            <div>
+              <div class="text-muted text-xs">ยอดยกไป (mock)</div>
+              <div class="font-medium">฿135,400.00</div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>วันที่</th>
+                  <th>เลขที่เอกสาร</th>
+                  <th>คำอธิบาย</th>
+                  <th class="text-right">Debit</th>
+                  <th class="text-right">Credit</th>
+                  <th class="text-right">คงเหลือ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>01/04/2568</td>
+                  <td class="text-mono">JE-0140</td>
+                  <td>ขายสินค้า</td>
+                  <td class="text-right">—</td>
+                  <td class="text-right">฿15,000.00</td>
+                  <td class="text-right">฿135,000.00</td>
+                </tr>
+                <tr>
+                  <td>05/04/2568</td>
+                  <td class="text-mono">JE-0142</td>
+                  <td>ปรับปรุงยอด</td>
+                  <td class="text-right">฿400.00</td>
+                  <td class="text-right">—</td>
+                  <td class="text-right">฿135,400.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+          document.documentElement.classList.toggle("dark", d.checked);
+        }
+      })();
+    </script>
+  </body>
+</html>

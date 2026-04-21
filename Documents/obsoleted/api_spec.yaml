@@ -1,0 +1,773 @@
+openapi: 3.0.3
+info:
+  title: ERP Project Management API
+  description: |
+    API สำหรับ 3 functions หลักของ ERP Project Management Module
+    - **Project Budget** — ตั้งและจัดการงบประมาณโปรเจค
+    - **Expense Records** — บันทึกและเบิกจ่ายเงิน
+    - **Project Progress** — ติดตามความคืบหน้าของงาน
+  version: 1.0.0
+  contact:
+    name: ERP Dev Team
+
+servers:
+  - url: https://api.erp.internal/v1
+    description: Production
+  - url: http://localhost:3000/v1
+    description: Local Development
+
+tags:
+  - name: Budget
+    description: จัดการงบประมาณโปรเจค
+  - name: Expense
+    description: รายการเบิกจ่ายเงิน
+  - name: Progress
+    description: ติดตามความคืบหน้าของโปรเจค
+
+# ─────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────
+paths:
+
+  # ── BUDGET ──────────────────────────────────
+  /budgets:
+    get:
+      tags: [Budget]
+      summary: List all project budgets
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Draft, Approved, Active, On Hold, Closed]
+        - in: query
+          name: module
+          schema:
+            type: string
+            enum: [HR, Finance, PM, Integration, Other]
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BudgetSummary"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+
+    post:
+      tags: [Budget]
+      summary: Create new project budget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetCreate"
+            example:
+              project_name: "ERP Phase 1 — HR Module"
+              total_budget_thb: 500000
+              budget_type: "Fixed Price"
+              start_date: "2026-04-01"
+              end_date: "2026-09-30"
+              module: ["HR"]
+              owner: "สมชาย ใจดี"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+
+  /budgets/{budget_id}:
+    parameters:
+      - $ref: "#/components/parameters/BudgetId"
+
+    get:
+      tags: [Budget]
+      summary: Get budget detail
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      tags: [Budget]
+      summary: Update budget (only Draft / On Hold allowed)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+        "409":
+          description: Cannot edit — budget is Active or Closed
+
+    delete:
+      tags: [Budget]
+      summary: Delete budget (only Draft allowed)
+      responses:
+        "204":
+          description: Deleted
+        "409":
+          description: Cannot delete — budget is not in Draft status
+
+  /budgets/{budget_id}/status:
+    parameters:
+      - $ref: "#/components/parameters/BudgetId"
+    patch:
+      tags: [Budget]
+      summary: Change budget status
+      description: |
+        Allowed transitions:
+        - Draft → Approved
+        - Approved → Active
+        - Active → On Hold
+        - On Hold → Active
+        - Active / On Hold → Closed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [Approved, Active, On Hold, Closed]
+                note:
+                  type: string
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+        "422":
+          description: Invalid status transition
+
+  /budgets/{budget_id}/summary:
+    parameters:
+      - $ref: "#/components/parameters/BudgetId"
+    get:
+      tags: [Budget]
+      summary: Get budget utilization summary
+      description: แสดงยอดใช้จ่ายรวม, คงเหลือ, แบ่งตาม Category
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BudgetSummaryDetail"
+
+  # ── EXPENSE ─────────────────────────────────
+  /expenses:
+    get:
+      tags: [Expense]
+      summary: List expense records
+      parameters:
+        - in: query
+          name: budget_id
+          schema: { type: string }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Draft, Pending Approval, Approved, Paid, Rejected]
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum: [Equipment, Labor, Travel, Software / License, Office Supply, Training, Other]
+        - in: query
+          name: date_from
+          schema: { type: string, format: date }
+        - in: query
+          name: date_to
+          schema: { type: string, format: date }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Expense"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+
+    post:
+      tags: [Expense]
+      summary: Create new expense record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseCreate"
+            example:
+              expense_name: "ซื้อ License IntelliJ IDEA"
+              budget_id: "BDG-001"
+              amount_thb: 12000
+              expense_date: "2026-04-11"
+              category: "Software / License"
+              payment_method: "Transfer"
+              requested_by: "สมชาย ใจดี"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+        "422":
+          description: Budget is not Active or amount exceeds remaining budget
+
+  /expenses/{expense_id}:
+    parameters:
+      - $ref: "#/components/parameters/ExpenseId"
+
+    get:
+      tags: [Expense]
+      summary: Get expense detail
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      tags: [Expense]
+      summary: Update expense (only Draft allowed)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+
+    delete:
+      tags: [Expense]
+      summary: Delete expense (only Draft / Rejected allowed)
+      responses:
+        "204":
+          description: Deleted
+
+  /expenses/{expense_id}/status:
+    parameters:
+      - $ref: "#/components/parameters/ExpenseId"
+    patch:
+      tags: [Expense]
+      summary: Change expense status (approval workflow)
+      description: |
+        Allowed transitions:
+        - Draft → Pending Approval
+        - Pending Approval → Approved (requires approved_by)
+        - Pending Approval → Rejected (requires approved_by + reason)
+        - Approved → Paid
+        - Rejected → Draft (re-submit)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [Pending Approval, Approved, Rejected, Paid, Draft]
+                approved_by:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+        "422":
+          description: Invalid status transition
+
+  # ── PROGRESS ────────────────────────────────
+  /progress:
+    get:
+      tags: [Progress]
+      summary: List all tasks / features
+      parameters:
+        - in: query
+          name: module
+          schema:
+            type: string
+            enum: [HR, Finance, PM, Integration, UAT, Other]
+        - in: query
+          name: phase
+          schema:
+            type: string
+            enum: [Analysis, Design, Development, Testing, UAT, Go-Live]
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Not Started, In Progress, On Hold, Done, Cancelled]
+        - in: query
+          name: priority
+          schema:
+            type: string
+            enum: [High, Medium, Low]
+        - in: query
+          name: assignee
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Task"
+                  summary:
+                    $ref: "#/components/schemas/ProgressSummary"
+
+    post:
+      tags: [Progress]
+      summary: Create new task / feature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCreate"
+            example:
+              task_feature: "สร้าง Employee CRUD API"
+              module: "HR"
+              phase: "Development"
+              priority: "High"
+              start_date: "2026-04-15"
+              target_date: "2026-05-15"
+              assignee: "สมชาย ใจดี"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /progress/{task_id}:
+    parameters:
+      - $ref: "#/components/parameters/TaskId"
+
+    get:
+      tags: [Progress]
+      summary: Get task detail
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      tags: [Progress]
+      summary: Update task info
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+    delete:
+      tags: [Progress]
+      summary: Delete task (only Not Started / Cancelled)
+      responses:
+        "204":
+          description: Deleted
+
+  /progress/{task_id}/progress:
+    parameters:
+      - $ref: "#/components/parameters/TaskId"
+    patch:
+      tags: [Progress]
+      summary: Update progress percentage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [percent]
+              properties:
+                percent:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                  example: 75
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /progress/{task_id}/status:
+    parameters:
+      - $ref: "#/components/parameters/TaskId"
+    patch:
+      tags: [Progress]
+      summary: Change task status
+      description: |
+        Allowed transitions:
+        - Not Started → In Progress
+        - In Progress → On Hold / Done / Cancelled
+        - On Hold → In Progress / Cancelled
+        When status = Done, actual_end_date is auto-set to today
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [In Progress, On Hold, Done, Cancelled]
+                note:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /progress/summary:
+    get:
+      tags: [Progress]
+      summary: Overall project progress summary
+      parameters:
+        - in: query
+          name: module
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressSummary"
+
+# ─────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────
+components:
+
+  parameters:
+    BudgetId:
+      name: budget_id
+      in: path
+      required: true
+      schema: { type: string }
+      example: BDG-001
+
+    ExpenseId:
+      name: expense_id
+      in: path
+      required: true
+      schema: { type: string }
+      example: EXP-001
+
+    TaskId:
+      name: task_id
+      in: path
+      required: true
+      schema: { type: string }
+      example: TSK-001
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+
+    # ── BUDGET SCHEMAS ──────────────────────────
+    BudgetCreate:
+      type: object
+      required: [project_name, total_budget_thb, budget_type, start_date, end_date]
+      properties:
+        project_name:       { type: string }
+        total_budget_thb:   { type: number, minimum: 0 }
+        budget_type:
+          type: string
+          enum: [Fixed Price, Time & Material, Retainer]
+        start_date:         { type: string, format: date }
+        end_date:           { type: string, format: date }
+        module:
+          type: array
+          items:
+            type: string
+            enum: [HR, Finance, PM, Integration, Other]
+        owner:              { type: string }
+        notes:              { type: string }
+
+    BudgetUpdate:
+      type: object
+      properties:
+        project_name:       { type: string }
+        total_budget_thb:   { type: number }
+        budget_type:        { type: string }
+        start_date:         { type: string, format: date }
+        end_date:           { type: string, format: date }
+        module:             { type: array, items: { type: string } }
+        owner:              { type: string }
+        notes:              { type: string }
+
+    Budget:
+      allOf:
+        - $ref: "#/components/schemas/BudgetCreate"
+        - type: object
+          properties:
+            budget_id:          { type: string, example: BDG-001 }
+            status:
+              type: string
+              enum: [Draft, Approved, Active, On Hold, Closed]
+            spent_amount_thb:   { type: number, readOnly: true }
+            remaining_thb:      { type: number, readOnly: true }
+            created_at:         { type: string, format: date-time }
+            updated_at:         { type: string, format: date-time }
+
+    BudgetSummary:
+      type: object
+      properties:
+        budget_id:          { type: string }
+        project_name:       { type: string }
+        status:             { type: string }
+        total_budget_thb:   { type: number }
+        spent_amount_thb:   { type: number }
+        remaining_thb:      { type: number }
+        utilization_pct:    { type: number }
+
+    BudgetSummaryDetail:
+      type: object
+      properties:
+        budget_id:          { type: string }
+        project_name:       { type: string }
+        total_budget_thb:   { type: number }
+        spent_amount_thb:   { type: number }
+        remaining_thb:      { type: number }
+        utilization_pct:    { type: number }
+        by_category:
+          type: array
+          items:
+            type: object
+            properties:
+              category:     { type: string }
+              total:        { type: number }
+              count:        { type: integer }
+        by_status:
+          type: object
+          properties:
+            pending:        { type: number }
+            approved:       { type: number }
+            paid:           { type: number }
+
+    # ── EXPENSE SCHEMAS ─────────────────────────
+    ExpenseCreate:
+      type: object
+      required: [expense_name, budget_id, amount_thb, expense_date, category, payment_method, requested_by]
+      properties:
+        expense_name:       { type: string }
+        budget_id:          { type: string }
+        amount_thb:         { type: number, minimum: 0 }
+        expense_date:       { type: string, format: date }
+        category:
+          type: string
+          enum: [Equipment, Labor, Travel, Software / License, Office Supply, Training, Other]
+        payment_method:
+          type: string
+          enum: [Transfer, Cash, Credit Card, Cheque]
+        requested_by:       { type: string }
+        notes:              { type: string }
+
+    ExpenseUpdate:
+      type: object
+      properties:
+        expense_name:       { type: string }
+        amount_thb:         { type: number }
+        expense_date:       { type: string, format: date }
+        category:           { type: string }
+        payment_method:     { type: string }
+        notes:              { type: string }
+
+    Expense:
+      allOf:
+        - $ref: "#/components/schemas/ExpenseCreate"
+        - type: object
+          properties:
+            expense_id:     { type: string, example: EXP-001 }
+            status:
+              type: string
+              enum: [Draft, Pending Approval, Approved, Paid, Rejected]
+            approved_by:    { type: string }
+            receipt_doc:
+              type: array
+              items: { type: string, format: uri }
+            created_at:     { type: string, format: date-time }
+            updated_at:     { type: string, format: date-time }
+
+    # ── PROGRESS SCHEMAS ────────────────────────
+    TaskCreate:
+      type: object
+      required: [task_feature, module, phase, priority]
+      properties:
+        task_feature:       { type: string }
+        module:
+          type: string
+          enum: [HR, Finance, PM, Integration, UAT, Other]
+        phase:
+          type: string
+          enum: [Analysis, Design, Development, Testing, UAT, Go-Live]
+        priority:
+          type: string
+          enum: [High, Medium, Low]
+        start_date:         { type: string, format: date }
+        target_date:        { type: string, format: date }
+        assignee:           { type: string }
+        notes:              { type: string }
+
+    TaskUpdate:
+      type: object
+      properties:
+        task_feature:       { type: string }
+        module:             { type: string }
+        phase:              { type: string }
+        priority:           { type: string }
+        start_date:         { type: string, format: date }
+        target_date:        { type: string, format: date }
+        assignee:           { type: string }
+        notes:              { type: string }
+
+    Task:
+      allOf:
+        - $ref: "#/components/schemas/TaskCreate"
+        - type: object
+          properties:
+            task_id:        { type: string, example: TSK-001 }
+            status:
+              type: string
+              enum: [Not Started, In Progress, On Hold, Done, Cancelled]
+            progress_pct:   { type: number, minimum: 0, maximum: 100 }
+            actual_end_date: { type: string, format: date }
+            created_at:     { type: string, format: date-time }
+            updated_at:     { type: string, format: date-time }
+
+    ProgressSummary:
+      type: object
+      properties:
+        total_tasks:        { type: integer }
+        overall_progress:   { type: number }
+        by_module:
+          type: array
+          items:
+            type: object
+            properties:
+              module:         { type: string }
+              total:          { type: integer }
+              done:           { type: integer }
+              in_progress:    { type: integer }
+              avg_progress:   { type: number }
+        by_status:
+          type: object
+          properties:
+            not_started:    { type: integer }
+            in_progress:    { type: integer }
+            on_hold:        { type: integer }
+            done:           { type: integer }
+            cancelled:      { type: integer }
+
+    # ── COMMON ──────────────────────────────────
+    Pagination:
+      type: object
+      properties:
+        page:     { type: integer }
+        limit:    { type: integer }
+        total:    { type: integer }
+        pages:    { type: integer }
+
+    Error:
+      type: object
+      properties:
+        code:     { type: string }
+        message:  { type: string }

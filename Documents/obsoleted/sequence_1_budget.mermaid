@@ -1,0 +1,35 @@
+sequenceDiagram
+    title 1. Project Budget - Create and Approve Flow
+
+    actor PM as Project Manager
+    participant API as Budget API
+    participant DB as Database
+    participant Approver as Approver
+
+    %% Step 1: Create Draft Budget
+    PM->>API: POST /budgets
+    Note over PM,API: project_name, total_budget_thb, budget_type
+    API->>DB: INSERT budget status=Draft
+    DB-->>API: budget_id=BDG-001
+    API-->>PM: 201 Created budget_id=BDG-001 status=Draft
+
+    %% Step 2: Submit for Approval
+    PM->>API: PATCH /budgets/BDG-001/status
+    Note over PM,API: status=Approved
+    API->>DB: UPDATE status=Approved
+    DB-->>API: OK
+    API-->>Approver: Notify - Budget pending review
+
+    %% Step 3: Approver Activates
+    Approver->>API: PATCH /budgets/BDG-001/status
+    Note over Approver,API: status=Active
+    API->>DB: UPDATE status=Active
+    DB-->>API: OK
+    API-->>PM: 200 OK status=Active
+    Note over PM,DB: Budget is now Active - Expenses can be linked
+
+    %% Step 4: Check Summary
+    PM->>API: GET /budgets/BDG-001/summary
+    API->>DB: SELECT spent, remaining, by_category
+    DB-->>API: utilization data
+    API-->>PM: 200 OK total=500000 spent=0 remaining=500000

@@ -1,0 +1,60 @@
+sequenceDiagram
+    title 3. Project Progress - Track and Complete Flow
+
+    actor PM as Project Manager
+    participant API as Progress API
+    participant DB as Database
+    actor Dev as Developer
+
+    %% Step 1: Create Task
+    PM->>API: POST /progress
+    Note over PM,API: task_feature=Employee CRUD API, module=HR, phase=Development
+    API->>DB: INSERT task status=Not Started, progress=0
+    DB-->>API: task_id=TSK-001
+    API-->>PM: 201 Created task_id=TSK-001 status=Not Started
+
+    %% Step 2: Developer starts work
+    Dev->>API: PATCH /progress/TSK-001/status
+    Note over Dev,API: status=In Progress
+    API->>DB: UPDATE status=In Progress
+    DB-->>API: OK
+    API-->>PM: 200 OK status=In Progress
+
+    %% Step 3: Update progress during work
+    Dev->>API: PATCH /progress/TSK-001/progress
+    Note over Dev,API: percent=30
+    API->>DB: UPDATE progress_pct=30
+    API-->>Dev: 200 OK progress_pct=30
+
+    Dev->>API: PATCH /progress/TSK-001/progress
+    Note over Dev,API: percent=75
+    API->>DB: UPDATE progress_pct=75
+    API-->>Dev: 200 OK progress_pct=75
+
+    %% Step 4: On Hold - optional
+    Note over Dev,DB: Optional - If blocked
+    Dev->>API: PATCH /progress/TSK-001/status
+    Note over Dev,API: status=On Hold, note=รอ API dependency
+    API->>DB: UPDATE status=On Hold
+    API-->>PM: Notify - Task blocked
+
+    Dev->>API: PATCH /progress/TSK-001/status
+    Note over Dev,API: status=In Progress
+    API->>DB: UPDATE status=In Progress
+
+    %% Step 5: Mark Done
+    Dev->>API: PATCH /progress/TSK-001/progress
+    Note over Dev,API: percent=100
+    API->>DB: UPDATE progress_pct=100
+    Dev->>API: PATCH /progress/TSK-001/status
+    Note over Dev,API: status=Done
+    API->>DB: UPDATE status=Done, actual_end_date=TODAY auto
+    DB-->>API: OK
+    API-->>PM: 200 OK status=Done, actual_end_date=2026-05-10
+
+    %% Step 6: PM checks overall summary
+    PM->>API: GET /progress/summary
+    Note over PM,API: filter module=HR
+    API->>DB: SELECT COUNT and AVG progress group by status
+    DB-->>API: summary data
+    API-->>PM: 200 OK total=12, done=5, in_progress=4, overall=58

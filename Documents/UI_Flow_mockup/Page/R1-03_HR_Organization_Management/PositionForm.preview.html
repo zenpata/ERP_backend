@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HR — ฟอร์มตำแหน่ง — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — PositionFormModal · ตาม MD_TO_PREVIEW_HTML_MANUAL</span>
+      <a href="../MD_TO_PREVIEW_HTML_MANUAL.md" class="text-muted" style="font-size: 12px">คู่มือแปลง MD→HTML</a>
+    </div>
+    <div class="shell" style="filter: brightness(0.92)">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link active" href="#">แผนก &amp; ตำแหน่ง</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">องค์กร</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-4">
+          <div class="control-panel" style="max-width: 420px">
+            <h2>Preview controls</h2>
+            <label class="control-row">
+              <input type="radio" name="posMode" id="modeCreate" checked />
+              <span>โหมดสร้าง</span>
+            </label>
+            <label class="control-row">
+              <input type="radio" name="posMode" id="modeEdit" />
+              <span>โหมดแก้ไข</span>
+            </label>
+            <label class="control-row">
+              <input type="checkbox" id="showError" />
+              <span>แสดงข้อผิดพลาด (422)</span>
+            </label>
+            <label class="control-row">
+              <input type="checkbox" id="previewDarkMode" />
+              <span>Dark mode</span>
+            </label>
+          </div>
+          <div class="page-header">
+            <h1 class="m-0">องค์กร</h1>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" role="presentation">
+      <div class="modal-dialog modal-dialog--wide" role="dialog" aria-modal="true" aria-labelledby="posFormTitle">
+        <div class="modal-dialog__head">
+          <h1 id="posFormTitle">เพิ่มตำแหน่ง</h1>
+        </div>
+        <div class="modal-dialog__body stack-y-4">
+          <p class="error-text" id="posErr" hidden>กรุณาเลือกแผนก และตรวจสอบระดับตำแหน่ง (422)</p>
+          <div class="grid-2">
+            <div class="field">
+              <span class="label">รหัสตำแหน่ง *</span>
+              <input class="input text-mono" id="fCode" placeholder="เช่น P010" />
+            </div>
+            <div class="field">
+              <span class="label">ชื่อตำแหน่ง *</span>
+              <input class="input" id="fName" placeholder="เช่น หัวหน้าทีมขาย" />
+            </div>
+            <div class="field field-span-full">
+              <span class="label">แผนก *</span>
+              <select class="text-input" id="fDept">
+                <option value="">— เลือกแผนก —</option>
+                <option selected>D001 ฝ่ายขาย</option>
+                <option>D002 ฝ่ายบัญชี</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="label">ระดับตำแหน่ง</span>
+              <input class="input" type="number" min="1" max="99" placeholder="เช่น 4" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-dialog__foot">
+          <button type="button" class="btn btn-sm">ยกเลิก</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnSave">บันทึกตำแหน่ง</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var dark = document.getElementById("previewDarkMode");
+        var create = document.getElementById("modeCreate");
+        var edit = document.getElementById("modeEdit");
+        var err = document.getElementById("showError");
+        var title = document.getElementById("posFormTitle");
+        var code = document.getElementById("fCode");
+        var name = document.getElementById("fName");
+        var dept = document.getElementById("fDept");
+        var btnSave = document.getElementById("btnSave");
+        var posErr = document.getElementById("posErr");
+
+        function applyDark() {
+          if (dark) document.documentElement.classList.toggle("dark", dark.checked);
+        }
+        if (dark) {
+          dark.addEventListener("change", applyDark);
+          applyDark();
+        }
+
+        function applyMode() {
+          var isEdit = edit && edit.checked;
+          if (title) title.textContent = isEdit ? "แก้ไขตำแหน่ง" : "เพิ่มตำแหน่ง";
+          if (code) {
+            code.disabled = isEdit;
+            code.value = isEdit ? "P001" : "";
+          }
+          if (name && isEdit) name.value = "ผู้จัดการ";
+          if (name && !isEdit) name.value = "";
+          if (dept) dept.disabled = isEdit;
+          if (btnSave) btnSave.textContent = isEdit ? "บันทึกการเปลี่ยนแปลง" : "บันทึกตำแหน่ง";
+        }
+        if (create) create.addEventListener("change", applyMode);
+        if (edit) edit.addEventListener("change", applyMode);
+        applyMode();
+
+        function applyErr() {
+          if (posErr) posErr.hidden = !err || !err.checked;
+        }
+        if (err) {
+          err.addEventListener("change", applyErr);
+          applyErr();
+        }
+      })();
+    </script>
+  </body>
+</html>

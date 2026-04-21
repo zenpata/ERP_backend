@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>รายละเอียดตาราง — Work Schedule Detail — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — WorkScheduleDetailPage · route: <code>/hr/work-schedules/:id</code></span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link" href="#">พนักงาน</a>
+          <a class="nav-link" href="#">ลาหยุด</a>
+          <div class="nav-group-label">เวลา</div>
+          <a class="nav-link" href="#">ลงเวลา</a>
+          <a class="nav-link" href="#">ล่วงเวลา (OT)</a>
+          <a class="nav-link active" href="#">ตารางเวลา</a>
+          <a class="nav-link" href="#">วันหยุด</a>
+          <div class="nav-group-label">เงินเดือน</div>
+          <a class="nav-link" href="#">รันเงินเดือน</a>
+        </nav>
+      </aside>
+
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">กะสำนักงาน</span>
+          <div class="header-actions">
+            <div class="avatar">HR</div>
+          </div>
+        </header>
+
+        <main class="main-content stack-y-6">
+
+          <!-- Breadcrumb -->
+          <div class="breadcrumb">
+            <a href="#">ตารางเวลา</a> / กะสำนักงาน
+          </div>
+
+          <!-- Page header -->
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">กะสำนักงาน</h1>
+              <span class="badge badge-success mt-2">ใช้งาน · 12 พนักงาน</span>
+            </div>
+            <div class="flex-row">
+              <button type="button" class="btn btn-sm">กลับ</button>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="tabs">
+            <button class="tab active" type="button">แก้ไขตาราง</button>
+            <button class="tab" type="button">มอบหมายพนักงาน</button>
+            <button class="tab" type="button">พนักงานปัจจุบัน (12)</button>
+          </div>
+
+          <!-- === TAB 1: Edit schedule === -->
+          <div id="tab-edit">
+            <div class="card">
+              <div class="card-head">ข้อมูลกะ</div>
+              <div class="card-body stack-y-4">
+                <div class="field">
+                  <span class="label">ชื่อกะ</span>
+                  <input type="text" class="input input-max-w-md" value="กะสำนักงาน" />
+                </div>
+
+                <div class="grid-2">
+                  <div class="field">
+                    <span class="label">เวลาเข้างาน</span>
+                    <input type="time" class="input" value="08:30" />
+                  </div>
+                  <div class="field">
+                    <span class="label">เวลาเลิกงาน</span>
+                    <input type="time" class="input" value="17:30" />
+                  </div>
+                  <div class="field">
+                    <span class="label">เริ่มพักกลางวัน</span>
+                    <input type="time" class="input" value="12:00" />
+                  </div>
+                  <div class="field">
+                    <span class="label">สิ้นสุดพักกลางวัน</span>
+                    <input type="time" class="input" value="13:00" />
+                  </div>
+                </div>
+
+                <!-- Days of week checkboxes -->
+                <div class="field">
+                  <span class="label">วันทำงาน</span>
+                  <div class="flex-row mt-2" style="gap:12px;flex-wrap:wrap">
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                      <input type="checkbox" checked /> จันทร์
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                      <input type="checkbox" checked /> อังคาร
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                      <input type="checkbox" checked /> พุธ
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                      <input type="checkbox" checked /> พฤหัสบดี
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                      <input type="checkbox" checked /> ศุกร์
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                      <input type="checkbox" /> เสาร์
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                      <input type="checkbox" /> อาทิตย์
+                    </label>
+                  </div>
+                  <div class="hint">ชั่วโมงทำงานต่อวัน: 8.0 ชม. (หักพัก 1 ชม.)</div>
+                </div>
+
+                <!-- OT threshold -->
+                <div class="field">
+                  <span class="label">นับ OT หลังจาก (นาที)</span>
+                  <input type="number" class="input input-max-w-xs" value="30" />
+                  <div class="hint">เช่น เลิกงาน 17:30 + 30 นาที → OT เริ่มนับ 18:00</div>
+                </div>
+
+                <div class="flex-row">
+                  <button type="button" class="btn btn-primary btn-sm">บันทึกการเปลี่ยนแปลง</button>
+                  <button type="button" class="btn btn-sm">ยกเลิก</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- === TAB 2: Assign (shown as second card) === -->
+          <div id="tab-assign">
+            <div class="card">
+              <div class="card-head">มอบหมายพนักงาน</div>
+              <div class="card-body stack-y-4">
+
+                <div class="grid-2">
+                  <div class="field">
+                    <span class="label">วันที่เริ่มต้น</span>
+                    <input type="date" class="input" value="2025-05-01" />
+                  </div>
+                  <div class="field">
+                    <span class="label">วันที่สิ้นสุด (ไม่บังคับ)</span>
+                    <input type="date" class="input" />
+                    <div class="hint">เว้นว่างหากไม่มีกำหนด</div>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <span class="label">ค้นหาพนักงาน</span>
+                  <input type="text" class="input input-max-w-md" placeholder="พิมพ์ชื่อหรือรหัสพนักงาน…" />
+                </div>
+
+                <!-- Employee selection list -->
+                <div class="divide-box">
+                  <div style="padding:8px 12px;background:color-mix(in srgb,var(--muted) 50%,var(--card));font-size:13px;font-weight:600;border-bottom:1px solid var(--border)">
+                    เลือกพนักงาน — ยังไม่มีกะ (2 คน)
+                  </div>
+                  <label style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border)">
+                    <input type="checkbox" checked />
+                    <div>
+                      <div class="font-medium">มณี ทองดี</div>
+                      <div class="text-muted text-xs">EMP-006 · ฝ่ายขาย</div>
+                    </div>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer">
+                    <input type="checkbox" />
+                    <div>
+                      <div class="font-medium">กิตติ สว่างใจ</div>
+                      <div class="text-muted text-xs">EMP-009 · ฝ่ายบัญชี</div>
+                    </div>
+                  </label>
+                </div>
+                <div class="hint">เลือก 1 คน · กดมอบหมายเพื่อผูกกะ</div>
+
+                <div class="flex-row">
+                  <button type="button" class="btn btn-primary btn-sm">มอบหมาย (1 คน)</button>
+                  <button type="button" class="btn btn-sm">ยกเลิก</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

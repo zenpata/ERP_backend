@@ -1,0 +1,142 @@
+%% ════════════════════════════════════════════════════════
+%% SEQUENCE DIAGRAM 1 — Project Budget Flow
+%% ════════════════════════════════════════════════════════
+
+sequenceDiagram
+    title 1. Project Budget — Create & Approve Flow
+
+    actor PM as Project Manager
+    participant API as Budget API
+    participant DB as Database
+    participant Approver as Approver
+
+    %% Step 1: Create Draft Budget
+    PM->>API: POST /budgets (project_name, total_budget_thb, budget_type...)
+    API->>DB: INSERT budget (status = Draft)
+    DB-->>API: budget_id = BDG-001
+    API-->>PM: 201 Created — budget_id BDG-001, status Draft
+
+    %% Step 2: Submit for Approval
+    PM->>API: PATCH /budgets/BDG-001/status (status: Approved)
+    API->>DB: UPDATE status = Approved
+    DB-->>API: OK
+    API-->>Approver: Notify — Budget pending review
+
+    %% Step 3: Approver Activates
+    Approver->>API: PATCH /budgets/BDG-001/status (status: Active)
+    API->>DB: UPDATE status = Active
+    DB-->>API: OK
+    API-->>PM: 200 OK — status Active
+    Note over PM,DB: Budget is now Active — Expenses can be linked
+
+    %% Step 4: Check Summary
+    PM->>API: GET /budgets/BDG-001/summary
+    API->>DB: SELECT spent, remaining, by_category
+    DB-->>API: utilization data
+    API-->>PM: 200 OK — total 500000, spent 0, remaining 500000
+
+%% ════════════════════════════════════════════════════════
+%% SEQUENCE DIAGRAM 2 — Expense Records Flow
+%% ════════════════════════════════════════════════════════
+
+sequenceDiagram
+    title 2. Expense Records — Submit & Approval Flow
+
+    actor Staff as Staff (Requester)
+    participant API as Expense API
+    participant DB as Database
+    participant Mgr as Manager (Approver)
+    participant Finance as Finance Team
+
+    %% Step 1: Create Expense Draft
+    Staff->>API: POST /expenses (expense_name, budget_id: BDG-001, amount_thb: 12000...)
+    API->>DB: CHECK budget exists + status = Active
+    DB-->>API: Budget Active confirmed
+    API->>DB: CHECK amount within remaining budget
+    DB-->>API: 500000 remaining confirmed
+    API->>DB: INSERT expense (status = Draft)
+    DB-->>API: expense_id = EXP-001
+    API-->>Staff: 201 Created — expense_id EXP-001, status Draft
+
+    %% Step 2: Submit for Approval
+    Staff->>API: PATCH /expenses/EXP-001/status (status: Pending Approval)
+    API->>DB: UPDATE status = Pending Approval
+    DB-->>API: OK
+    API-->>Mgr: Notify — Expense pending approval
+
+    %% Step 3a: Manager Approves
+    Mgr->>API: PATCH /expenses/EXP-001/status (status: Approved, approved_by: สมศักดิ์)
+    API->>DB: UPDATE status = Approved, approved_by
+    DB-->>API: OK
+    API-->>Finance: Notify — Ready to pay
+    API-->>Staff: 200 OK — status Approved
+
+    %% Step 3b: (Alternative) Manager Rejects
+    Note over Mgr,DB: Alternative Path — Manager rejects
+    Mgr-->>API: PATCH /expenses/EXP-001/status (status: Rejected, reason: เกินวงเงิน)
+    API->>DB: UPDATE status = Rejected
+    API-->>Staff: 200 OK — status Rejected, reason เกินวงเงิน
+
+    %% Step 4: Finance Marks as Paid
+    Finance->>API: PATCH /expenses/EXP-001/status (status: Paid)
+    API->>DB: UPDATE status = Paid
+    API->>DB: UPDATE budget.spent_amount += 12000
+    DB-->>API: OK
+    API-->>Staff: 200 OK — status Paid
+    Note over Staff,DB: Remaining budget auto-updated
+
+%% ════════════════════════════════════════════════════════
+%% SEQUENCE DIAGRAM 3 — Project Progress Flow
+%% ════════════════════════════════════════════════════════
+
+sequenceDiagram
+    title 3. Project Progress — Track & Complete Flow
+
+    actor PM as Project Manager
+    participant API as Progress API
+    participant DB as Database
+    actor Dev as Developer
+
+    %% Step 1: Create Task
+    PM->>API: POST /progress (task_feature: Employee CRUD API, module: HR, phase: Development...)
+    API->>DB: INSERT task (status = Not Started, progress = 0)
+    DB-->>API: task_id = TSK-001
+    API-->>PM: 201 Created — task_id TSK-001, status Not Started
+
+    %% Step 2: Developer starts work
+    Dev->>API: PATCH /progress/TSK-001/status (status: In Progress)
+    API->>DB: UPDATE status = In Progress
+    DB-->>API: OK
+    API-->>PM: 200 OK — status In Progress
+
+    %% Step 3: Update progress during work
+    Dev->>API: PATCH /progress/TSK-001/progress (percent: 30)
+    API->>DB: UPDATE progress_pct = 30
+    API-->>Dev: 200 OK — progress_pct 30
+
+    Dev->>API: PATCH /progress/TSK-001/progress (percent: 75)
+    API->>DB: UPDATE progress_pct = 75
+    API-->>Dev: 200 OK — progress_pct 75
+
+    %% Step 4: On Hold (optional)
+    Note over Dev,DB: Optional — If blocked
+    Dev->>API: PATCH /progress/TSK-001/status (status: On Hold, note: รอ API dependency)
+    API->>DB: UPDATE status = On Hold
+    API-->>PM: Notify — Task blocked
+
+    Dev->>API: PATCH /progress/TSK-001/status (status: In Progress)
+    API->>DB: UPDATE status = In Progress
+
+    %% Step 5: Mark Done
+    Dev->>API: PATCH /progress/TSK-001/progress (percent: 100)
+    API->>DB: UPDATE progress_pct = 100
+    Dev->>API: PATCH /progress/TSK-001/status (status: Done)
+    API->>DB: UPDATE status = Done, actual_end_date = TODAY (auto)
+    DB-->>API: OK
+    API-->>PM: 200 OK — status Done, actual_end_date 2026-05-10
+
+    %% Step 6: PM checks overall summary
+    PM->>API: GET /progress/summary?module=HR
+    API->>DB: SELECT COUNT, AVG(progress), group by status
+    DB-->>API: summary data
+    API-->>PM: 200 OK — total 12, done 5, in_progress 4, overall 58%

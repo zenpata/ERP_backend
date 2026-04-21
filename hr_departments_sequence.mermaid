@@ -1,0 +1,156 @@
+sequenceDiagram
+    title HR Departments API — Full CRUD Flow
+
+    actor FE as Frontend hr_admin
+    participant GW as API Router
+    participant Auth as Auth Middleware
+    participant DS as DepartmentService
+    participant DB as PostgreSQL
+
+    %% ─── 1. GET LIST ────────────────────────────────────────────
+    Note over FE,DB: 1. GET /api/hr/departments — List with search and pagination
+
+    FE->>GW: GET /api/hr/departments?search=&parentId=&page=1&perPage=20
+    GW->>Auth: validateToken(JWT)
+    Auth-->>GW: user + permissions
+    GW->>Auth: requirePermission(hr:department:view)
+    Auth-->>GW: authorized
+    GW->>DS: listDepartments(search, parentId, page, perPage)
+    DS->>DB: SELECT id, code, name, description, parent_id, manager_id, created_at, updated_at FROM departments WHERE filters ORDER BY name ASC LIMIT perPage OFFSET offset
+    DB-->>DS: rows[]
+    DS->>DB: SELECT COUNT(*) FROM departments WHERE filters
+    DB-->>DS: total
+    DS-->>GW: data[], meta(page, perPage, total, totalPages)
+    GW-->>FE: 200 OK — success:true, data[], meta
+
+    %% ─── 2. GET BY ID ───────────────────────────────────────────
+    Note over FE,DB: 2. GET /api/hr/departments/:id — Detail
+
+    FE->>GW: GET /api/hr/departments/:id
+    GW->>Auth: validateToken + requirePermission(hr:department:view)
+    Auth-->>GW: authorized
+    GW->>DS: getDepartmentById(id)
+    DS->>DB: SELECT dept.*, parent.name AS parentName, emp.first_name_th AS managerName, COUNT(children.id) AS childrenCount, COUNT(pos.id) AS positionsCount FROM departments dept LEFT JOIN ...
+    DB-->>DS: row or null
+    alt Not Found
+        DS-->>GW: NotFoundError
+        GW-->>FE: 404 — DEPT_NOT_FOUND
+    else Found
+        DS-->>GW: DepartmentDetail
+        GW-->>FE: 200 OK — id, code, name, parentId, parentName, managerId, managerName, childrenCount, positionsCount, createdAt, updatedAt
+    end
+
+    %% ─── 3. POST CREATE ─────────────────────────────────────────
+    Note over FE,DB: 3. POST /api/hr/departments — Create
+
+    FE->>GW: POST /api/hr/departments — body: name, description?, parentId?, managerId?
+    GW->>Auth: validateToken + requirePermission(hr:department:edit)
+    Auth-->>GW: authorized
+    GW->>DS: createDepartment(name, description, parentId, managerId)
+
+    opt parentId provided
+        DS->>DB: SELECT id FROM departments WHERE id = parentId
+        DB-->>DS: parent row
+        alt parentId not found
+            DS-->>GW: ValidationError
+            GW-->>FE: 422 — INVALID_PARENT_ID
+        end
+        DS->>DS: checkMaxDepth(parentId) — max 3 levels
+        alt depth exceeded
+            DS-->>GW: ValidationError
+            GW-->>FE: 422 — MAX_DEPTH_EXCEEDED
+        end
+    end
+
+    opt managerId provided
+        DS->>DB: SELECT id, status FROM employees WHERE id = managerId
+        DB-->>DS: employee row
+        alt employee not found or inactive
+            DS-->>GW: ValidationError
+            GW-->>FE: 422 — INVALID_MANAGER_ID
+        end
+    end
+
+    DS->>DS: generateCode → DEPT-001
+    DS->>DB: INSERT INTO departments(id, code, name, description, parent_id, manager_id, created_at, updated_at)
+    DB-->>DS: newDepartment
+    GW-->>FE: 201 Created — Department object
+
+    %% ─── 4. PATCH UPDATE ────────────────────────────────────────
+    Note over FE,DB: 4. PATCH /api/hr/departments/:id — Partial Update
+
+    FE->>GW: PATCH /api/hr/departments/:id — partial body
+    GW->>Auth: validateToken + requirePermission(hr:department:edit)
+    Auth-->>GW: authorized
+    GW->>DS: updateDepartment(id, payload)
+    DS->>DB: SELECT * FROM departments WHERE id
+    DB-->>DS: existing row
+    alt Not Found
+        DS-->>GW: NotFoundError
+        GW-->>FE: 404 — DEPT_NOT_FOUND
+    end
+
+    opt parentId changed
+        DS->>DS: validateNoCircularRef(id, newParentId)
+        alt circular reference detected
+            DS-->>GW: ValidationError
+            GW-->>FE: 422 — CIRCULAR_HIERARCHY
+        end
+        DS->>DS: checkMaxDepth(newParentId)
+        alt depth exceeded
+            DS-->>GW: ValidationError
+            GW-->>FE: 422 — MAX_DEPTH_EXCEEDED
+        end
+    end
+
+    opt managerId changed
+        DS->>DB: Validate employee exists and is active
+        DB-->>DS: employee row
+        alt invalid
+            DS-->>GW: ValidationError
+            GW-->>FE: 422 — INVALID_MANAGER_ID
+        end
+    end
+
+    DS->>DB: UPDATE departments SET ... WHERE id
+    DB-->>DS: updatedDepartment
+    GW-->>FE: 200 OK — Updated Department object
+
+    %% ─── 5. DELETE ──────────────────────────────────────────────
+    Note over FE,DB: 5. DELETE /api/hr/departments/:id — Delete with business rule checks
+
+    FE->>GW: DELETE /api/hr/departments/:id
+    GW->>Auth: validateToken + requirePermission(hr:department:edit)
+    Auth-->>GW: authorized
+    GW->>DS: deleteDepartment(id)
+    DS->>DB: SELECT * FROM departments WHERE id
+    DB-->>DS: row
+    alt Not Found
+        DS-->>GW: NotFoundError
+        GW-->>FE: 404 — DEPT_NOT_FOUND
+    end
+
+    DS->>DB: COUNT employees WHERE department_id = id AND status = active
+    DB-->>DS: employeeCount
+    alt employeeCount > 0
+        DS-->>GW: BusinessRuleError
+        GW-->>FE: 409 — DEPT_HAS_EMPLOYEES
+    end
+
+    DS->>DB: COUNT departments WHERE parent_id = id
+    DB-->>DS: childrenCount
+    alt childrenCount > 0
+        DS-->>GW: BusinessRuleError
+        GW-->>FE: 409 — DEPT_HAS_CHILDREN
+    end
+
+    DS->>DB: COUNT positions WHERE department_id = id
+    DB-->>DS: positionCount
+    alt positionCount > 0
+        DS-->>GW: BusinessRuleError
+        GW-->>FE: 409 — DEPT_HAS_POSITIONS
+    end
+
+    DS->>DB: DELETE FROM departments WHERE id
+    DB-->>DS: ok
+    GW-->>FE: 200 OK — Department deleted successfully

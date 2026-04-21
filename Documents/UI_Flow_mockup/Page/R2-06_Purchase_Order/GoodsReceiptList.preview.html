@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>จัดซื้อ — ใบรับสินค้า — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      .info-callout {
+        background:#ede9fe; border:1px solid #c4b5fd; border-radius:6px;
+        padding:0.5rem 0.875rem; font-size:0.8rem; color:#4c1d95;
+        display:flex; align-items:center; gap:0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — GoodsReceiptListPage (audit view — read only)</span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">จัดซื้อ</div>
+          <a class="nav-link" href="#">ใบสั่งซื้อ</a>
+          <a class="nav-link active" href="#">ใบรับสินค้า</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">ใบรับสินค้า (GR)</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">ใบรับสินค้า</h1>
+            <!-- ไม่มีปุ่ม "สร้าง GR" ที่นี่ เพราะต้องสร้างจาก PO detail เท่านั้น -->
+          </div>
+
+          <!-- Callout อธิบาย workflow -->
+          <div class="info-callout">
+            <span>ℹ️</span>
+            <span>หน้านี้แสดงประวัติรับสินค้าทั้งหมดเพื่อ audit — หากต้องการ<strong>สร้าง GR ใหม่</strong> ให้ไปที่ <a href="#" class="link" style="color:#7c3aed;">ใบสั่งซื้อ</a> ที่มีสถานะ <strong>approved</strong> แล้วกด "สร้างใบรับสินค้า"</span>
+          </div>
+
+          <!-- Filter -->
+          <div class="card card-pad" style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:flex-end;">
+            <div>
+              <div class="text-muted text-xs" style="margin-bottom:2px;">อ้างอิง PO</div>
+              <input class="input" placeholder="เลขที่ PO..." style="width:160px;" />
+            </div>
+            <div>
+              <div class="text-muted text-xs" style="margin-bottom:2px;">วันที่รับ (จาก)</div>
+              <input class="input" type="date" style="width:140px;" />
+            </div>
+            <div>
+              <div class="text-muted text-xs" style="margin-bottom:2px;">วันที่รับ (ถึง)</div>
+              <input class="input" type="date" style="width:140px;" />
+            </div>
+            <button type="button" class="btn btn-sm">กรอง</button>
+          </div>
+
+          <!-- Table -->
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>เลขที่ GR</th>
+                  <th>อ้างอิง PO</th>
+                  <th>ผู้ขาย</th>
+                  <th>วันที่รับ</th>
+                  <th>ผู้รับสินค้า</th>
+                  <th class="text-right">จำนวนรายการ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-mono">GR-2568-005</td>
+                  <td class="text-mono"><a href="#" class="link">PO-2568-010</a></td>
+                  <td>Supplier A</td>
+                  <td>12/04/2568</td>
+                  <td>Somchai P.</td>
+                  <td class="text-right">2 รายการ</td>
+                  <td><a href="#" class="link">เปิด</a></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">GR-2568-004</td>
+                  <td class="text-mono"><a href="#" class="link">PO-2568-010</a></td>
+                  <td>Supplier A</td>
+                  <td>08/04/2568</td>
+                  <td>Somchai P.</td>
+                  <td class="text-right">1 รายการ</td>
+                  <td><a href="#" class="link">เปิด</a></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">GR-2568-003</td>
+                  <td class="text-mono"><a href="#" class="link">PO-2568-008</a></td>
+                  <td>Supplier A</td>
+                  <td>02/04/2568</td>
+                  <td>Wanchai K.</td>
+                  <td class="text-right">3 รายการ</td>
+                  <td><a href="#" class="link">เปิด</a></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">GR-2568-002</td>
+                  <td class="text-mono"><a href="#" class="link">PO-2568-009</a></td>
+                  <td>Supplier B</td>
+                  <td>29/03/2568</td>
+                  <td>Apinya W.</td>
+                  <td class="text-right">1 รายการ</td>
+                  <td><a href="#" class="link">เปิด</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+          document.documentElement.classList.toggle("dark", d.checked);
+        }
+      })();
+    </script>
+  </body>
+</html>

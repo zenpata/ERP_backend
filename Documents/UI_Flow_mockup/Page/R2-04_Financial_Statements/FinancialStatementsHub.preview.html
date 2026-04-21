@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>งบการเงิน — Reports Hub — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      .report-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+      .report-card { display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: inherit;
+        border-radius: var(--radius-xl); border: 1px solid var(--border); background: var(--card);
+        padding: 20px; transition: box-shadow 0.15s, border-color 0.15s; }
+      .report-card:hover { box-shadow: 0 4px 12px color-mix(in srgb, var(--foreground) 8%, transparent); border-color: var(--primary); }
+      .report-card__icon { font-size: 22px; line-height: 1; margin-bottom: 4px; }
+      .report-card__title { font-size: 14px; font-weight: 600; color: var(--foreground); margin: 0; }
+      .report-card__desc { font-size: 12px; color: var(--muted-foreground); margin: 0; line-height: 1.5; }
+      .report-card__arrow { margin-top: auto; padding-top: 14px; font-size: 12px; color: var(--primary); }
+      .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+      .kpi-tile { border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--card); padding: 14px 16px; }
+      .kpi-tile__label { font-size: 11px; color: var(--muted-foreground); margin-bottom: 4px; }
+      .kpi-tile__value { font-size: 20px; font-weight: 700; }
+      .kpi-tile__sub { font-size: 11px; color: var(--muted-foreground); margin-top: 2px; }
+      .kpi-tile--danger .kpi-tile__value { color: var(--destructive); }
+      .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+        color: var(--muted-foreground); margin: 0 0 10px; }
+      .hub-meta { font-size: 12px; color: var(--muted-foreground); }
+    </style>
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — FinancialStatementsHubPage · <code>/finance/reports</code></span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link" href="#">ใบแจ้งหนี้</a>
+          <a class="nav-link active" href="#">รายงาน</a>
+          <a class="nav-link" href="#">บัญชีธนาคาร</a>
+          <a class="nav-link" href="#">ภาษี</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">รายงานทางการเงิน</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content stack-y-6">
+
+          <!-- Page header -->
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">รายงานทางการเงิน</h1>
+              <p style="margin:4px 0 0; font-size:13px;" class="text-muted">ดูงบการเงิน วิเคราะห์ข้อมูล หรือ export รายงาน</p>
+            </div>
+            <span class="hub-meta">อัปเดตล่าสุด: 18 เม.ย. 2026, 09:42</span>
+          </div>
+
+          <!-- KPI summary (GET /api/finance/reports/summary — optional) -->
+          <div class="card card-pad">
+            <p class="section-label">ภาพรวม</p>
+            <div class="kpi-grid">
+              <div class="kpi-tile">
+                <div class="kpi-tile__label">รายได้รวม (เดือนนี้)</div>
+                <div class="kpi-tile__value">฿1,200,000</div>
+                <div class="kpi-tile__sub">↑ 8% จากเดือนก่อน</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-tile__label">กำไรสุทธิ (เดือนนี้)</div>
+                <div class="kpi-tile__value">฿320,000</div>
+                <div class="kpi-tile__sub">อัตรากำไร 26.7%</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-tile__label">เงินสดคงเหลือ</div>
+                <div class="kpi-tile__value">฿875,000</div>
+                <div class="kpi-tile__sub">ณ วันนี้</div>
+              </div>
+              <div class="kpi-tile kpi-tile--danger">
+                <div class="kpi-tile__label">AR ค้างชำระ</div>
+                <div class="kpi-tile__value">฿62,000</div>
+                <div class="kpi-tile__sub">3 ใบแจ้งหนี้เกินกำหนด</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Report entry cards -->
+          <div>
+            <p class="section-label">เลือกรายงาน</p>
+            <div class="report-cards">
+
+              <a href="#" class="report-card">
+                <div class="report-card__icon">📊</div>
+                <p class="report-card__title">งบกำไรขาดทุน (P&amp;L)</p>
+                <p class="report-card__desc">รายได้ ต้นทุน ค่าใช้จ่าย และกำไรสุทธิในช่วงเวลา — เปรียบเทียบงวดก่อนได้</p>
+                <div class="report-card__arrow">เปิดรายงาน →</div>
+              </a>
+
+              <a href="#" class="report-card">
+                <div class="report-card__icon">🏦</div>
+                <p class="report-card__title">งบดุล (Balance Sheet)</p>
+                <p class="report-card__desc">สินทรัพย์ = หนี้สิน + ส่วนของผู้ถือหุ้น ณ วันที่อ้างอิง</p>
+                <div class="report-card__arrow">เปิดรายงาน →</div>
+              </a>
+
+              <a href="#" class="report-card">
+                <div class="report-card__icon">💸</div>
+                <p class="report-card__title">งบกระแสเงินสด (Cash Flow)</p>
+                <p class="report-card__desc">เงินสดเข้า-ออกแยก operating / investing / financing พร้อมยอดต้น-ปลายงวด</p>
+                <div class="report-card__arrow">เปิดรายงาน →</div>
+              </a>
+
+              <a href="#" class="report-card">
+                <div class="report-card__icon">📋</div>
+                <p class="report-card__title">รายงานอายุลูกหนี้ (AR Aging)</p>
+                <p class="report-card__desc">ยอดค้างชำระแยก bucket 0–30, 31–60, 61–90, 90+ วัน ต่อลูกค้า</p>
+                <div class="report-card__arrow">ดูรายงาน →</div>
+              </a>
+
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+          document.documentElement.classList.toggle("dark", d.checked);
+        }
+      })();
+    </script>
+  </body>
+</html>

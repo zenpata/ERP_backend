@@ -1,0 +1,68 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ERP: Start backend",
+      "type": "shell",
+      "command": "bun run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/erp_backend",
+        "env": {}
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "erp-backend",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "ERP Backend running at http://localhost:"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "erp-dev"
+      }
+    },
+    {
+      "label": "ERP: Start frontend",
+      "type": "shell",
+      "command": "bun run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/erp_frontend",
+        "env": {}
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "erp-frontend",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "(ready in [0-9]+ ms|Local:.*5173|http://127\\.0\\.0\\.1:5173)"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "erp-dev"
+      }
+    },
+    {
+      "label": "ERP: Start all (backend + frontend)",
+      "dependsOn": ["ERP: Start backend", "ERP: Start frontend"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "ERP: Stop (kill listeners on 3000 & 5173)",
+      "type": "shell",
+      "command": "for port in 3000 5173; do pids=$(lsof -tiTCP:\"$port\" -sTCP:LISTEN 2>/dev/null); if [ -n \"$pids\" ]; then kill -15 $pids 2>/dev/null && echo \"Stopped PID(s) on port $port: $pids\" || echo \"Could not stop port $port\"; else echo \"Nothing listening on port $port\"; fi; done",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

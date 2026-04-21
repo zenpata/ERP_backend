@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance — รายละเอียด Journal — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — JournalDetailPage (อ่านอย่างเดียวเมื่อ posted)</span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link active" href="#">สมุดรายวัน</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">JE-2025-0142</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">JE-2025-0142</h1>
+            <div class="flex-row" style="gap: 0.5rem">
+              <span class="badge badge-success">posted</span>
+              <button type="button" class="btn btn-sm">กลับ</button>
+            </div>
+          </div>
+
+          <div class="grid-2 card card-pad">
+            <div>
+              <div class="text-muted text-xs">วันที่ทำรายการ</div>
+              <div>12/04/2568</div>
+            </div>
+            <div>
+              <div class="text-muted text-xs">อ้างอิง</div>
+              <div class="text-mono">INV-2025-088</div>
+            </div>
+            <div class="field-span-full">
+              <div class="text-muted text-xs">คำอธิบาย</div>
+              <div>ปรับปรุงยอดสิ้นเดือน</div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>บัญชี</th>
+                  <th>คำอธิบายบรรทัด</th>
+                  <th class="text-right">Debit</th>
+                  <th class="text-right">Credit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-mono">5-5200</td>
+                  <td>ค่าใช้จ่าย</td>
+                  <td class="text-right">฿50,000.00</td>
+                  <td class="text-right">—</td>
+                </tr>
+                <tr>
+                  <td class="text-mono">1-1000</td>
+                  <td>เงินสด</td>
+                  <td class="text-right">—</td>
+                  <td class="text-right">฿50,000.00</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="2" class="text-right text-muted">รวม</td>
+                  <td class="text-right row-total">฿50,000.00</td>
+                  <td class="text-right row-total">฿50,000.00</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="flex-row" style="gap: 0.5rem">
+            <button type="button" class="btn btn-sm">Reverse (ถ้า policy อนุญาต)</button>
+            <button type="button" class="btn btn-sm">พิมพ์ / Export</button>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+          document.documentElement.classList.toggle("dark", d.checked);
+        }
+      })();
+    </script>
+  </body>
+</html>

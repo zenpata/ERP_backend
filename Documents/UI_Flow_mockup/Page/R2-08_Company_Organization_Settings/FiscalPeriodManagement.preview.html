@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ตั้งค่า — รอบบัญชี — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      /* ── Modal ── */
+      .modal-backdrop {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-backdrop.open { display: flex; }
+      .modal {
+        background: #fff;
+        border-radius: 10px;
+        padding: 1.5rem;
+        width: 480px;
+        max-width: 95vw;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      }
+      .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+      .modal-header h2 { margin: 0; font-size: 1.1rem; }
+      .modal-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #64748b; line-height: 1; padding: 0.25rem; }
+      .modal-body { margin-bottom: 1.25rem; }
+      .modal-footer { display: flex; gap: 0.75rem; justify-content: flex-end; }
+      .preview-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.75rem; }
+      .preview-table th { background: #f8fafc; padding: 0.4rem 0.6rem; text-align: left; color: #475569; font-weight: 600; border: 1px solid #e2e8f0; }
+      .preview-table td { padding: 0.35rem 0.6rem; border: 1px solid #e2e8f0; color: #1e293b; }
+      .preview-table tr.skip td { color: #94a3b8; background: #f8fafc; }
+      .skip-badge { background: #f1f5f9; color: #94a3b8; border-radius: 4px; padding: 1px 6px; font-size: 0.7rem; }
+      .new-badge  { background: #d1fae5; color: #065f46; border-radius: 4px; padding: 1px 6px; font-size: 0.7rem; }
+      .alert-warn { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 0.6rem 0.875rem; font-size: 0.82rem; color: #78350f; margin-top: 0.75rem; }
+      .alert-err  { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; padding: 0.6rem 0.875rem; font-size: 0.82rem; color: #7f1d1d; margin-top: 0.75rem; }
+      /* ── rest ── */
+      .current-period-banner {
+        background: #d1fae5;
+        border: 1px solid #6ee7b7;
+        border-radius: 8px;
+        padding: 0.875rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .current-period-banner .icon { font-size: 1.5rem; }
+      .current-period-banner .title { font-weight: 600; color: #064e3b; font-size: 0.875rem; }
+      .current-period-banner .detail { color: #065f46; font-size: 0.875rem; }
+      .no-period-banner {
+        background: #fef3c7;
+        border: 1px solid #fcd34d;
+        border-radius: 8px;
+        padding: 0.875rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .filter-bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+      .filter-bar .label { margin: 0; font-size: 0.875rem; color: #475569; white-space: nowrap; }
+      .filter-bar select { width: auto; min-width: 130px; }
+      .badge-open   { background: #d1fae5; color: #065f46; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; }
+      .badge-closed { background: #f1f5f9; color: #64748b; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; }
+      .badge-current { background: #dbeafe; color: #1e40af; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; margin-left: 0.4rem; }
+      tr.row-current { background: #f0fdf4; }
+      .action-note { font-size: 0.8rem; color: #94a3b8; margin-top: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — FiscalPeriodManagementPage · <code>/settings/fiscal-periods</code></span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">ตั้งค่า</div>
+          <a class="nav-link" href="#">ข้อมูลบริษัท</a>
+          <a class="nav-link active" href="#">รอบบัญชี</a>
+          <a class="nav-link" href="#">ผู้ใช้งาน</a>
+          <a class="nav-link" href="#">สิทธิ์การเข้าถึง</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">รอบบัญชี</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content stack-y-6">
+
+          <!-- Page Header -->
+          <div class="page-header">
+            <h1 class="m-0">จัดการรอบบัญชี</h1>
+            <div>
+              <!-- super_admin only — ซ่อนสำหรับผู้ใช้ที่ไม่มีสิทธิ์ -->
+              <button type="button" class="btn btn-primary">+ สร้างรอบบัญชีใหม่</button>
+            </div>
+          </div>
+
+          <!-- Current Period Banner -->
+          <div class="current-period-banner">
+            <span class="icon">📅</span>
+            <div>
+              <div class="title">รอบบัญชีปัจจุบัน</div>
+              <div class="detail">เม.ย. 2568 &nbsp;·&nbsp; 1 เม.ย. – 30 เม.ย. 2568 &nbsp;·&nbsp; <strong>เปิดอยู่</strong></div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="filter-bar">
+            <span class="label">ปีบัญชี</span>
+            <select class="input">
+              <option>ทั้งหมด</option>
+              <option selected>2568</option>
+              <option>2567</option>
+            </select>
+            <span class="label">Granularity</span>
+            <select class="input">
+              <option selected>ทั้งหมด</option>
+              <option>1M — รายเดือน</option>
+              <option>1Q — รายไตรมาส</option>
+              <option>1H — ครึ่งปี</option>
+              <option>1Y — รายปี</option>
+            </select>
+            <span class="label">สถานะ</span>
+            <select class="input">
+              <option selected>ทั้งหมด</option>
+              <option>open</option>
+              <option>closed</option>
+            </select>
+          </div>
+
+          <!-- Fiscal Periods Table -->
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>รอบบัญชี</th>
+                  <th>Granularity</th>
+                  <th>วันเริ่มต้น</th>
+                  <th>วันสิ้นสุด</th>
+                  <th>สถานะ</th>
+                  <th>ปิดโดย / วันที่ปิด</th>
+                  <th>การทำงาน</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ม.ค. 2568 <span style="color:#94a3b8;font-size:0.8rem">(Period 1)</span></td>
+                  <td><span style="background:#ede9fe;color:#5b21b6;border-radius:4px;padding:2px 7px;font-size:0.75rem;font-weight:600">1M</span></td>
+                  <td>1 ม.ค. 2568</td>
+                  <td>31 ม.ค. 2568</td>
+                  <td><span class="badge-closed">closed</span></td>
+                  <td style="color:#64748b;font-size:0.85rem">admin · 15 ก.พ. 2568</td>
+                  <td><button type="button" class="btn btn-sm btn-ghost">เปิดรอบอีกครั้ง</button></td>
+                </tr>
+                <tr>
+                  <td>ก.พ. 2568 <span style="color:#94a3b8;font-size:0.8rem">(Period 2)</span></td>
+                  <td><span style="background:#ede9fe;color:#5b21b6;border-radius:4px;padding:2px 7px;font-size:0.75rem;font-weight:600">1M</span></td>
+                  <td>1 ก.พ. 2568</td>
+                  <td>28 ก.พ. 2568</td>
+                  <td><span class="badge-closed">closed</span></td>
+                  <td style="color:#64748b;font-size:0.85rem">admin · 15 มี.ค. 2568</td>
+                  <td><button type="button" class="btn btn-sm btn-ghost">เปิดรอบอีกครั้ง</button></td>
+                </tr>
+                <tr>
+                  <td>มี.ค. 2568 <span style="color:#94a3b8;font-size:0.8rem">(Period 3)</span></td>
+                  <td><span style="background:#ede9fe;color:#5b21b6;border-radius:4px;padding:2px 7px;font-size:0.75rem;font-weight:600">1M</span></td>
+                  <td>1 มี.ค. 2568</td>
+                  <td>31 มี.ค. 2568</td>
+                  <td><span class="badge-closed">closed</span></td>
+                  <td style="color:#64748b;font-size:0.85rem">admin · 10 เม.ย. 2568</td>
+                  <td><button type="button" class="btn btn-sm btn-ghost">เปิดรอบอีกครั้ง</button></td>
+                </tr>
+                <tr class="row-current">
+                  <td>
+                    <strong>เม.ย. 2568</strong> <span style="color:#94a3b8;font-size:0.8rem">(Period 4)</span>
+                    <span class="badge-current">ปัจจุบัน</span>
+                  </td>
+                  <td><span style="background:#ede9fe;color:#5b21b6;border-radius:4px;padding:2px 7px;font-size:0.75rem;font-weight:600">1M</span></td>
+                  <td>1 เม.ย. 2568</td>
+                  <td>30 เม.ย. 2568</td>
+                  <td><span class="badge-open">open</span></td>
+                  <td style="color:#94a3b8">—</td>
+                  <td><button type="button" class="btn btn-sm btn-warn">ปิดรอบ</button></td>
+                </tr>
+                <tr>
+                  <td>Q2 FY2568 (Apr–Jun) <span style="color:#94a3b8;font-size:0.8rem">(Period 1)</span></td>
+                  <td><span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 7px;font-size:0.75rem;font-weight:600">1Q</span></td>
+                  <td>1 เม.ย. 2568</td>
+                  <td>30 มิ.ย. 2568</td>
+                  <td><span class="badge-open">open</span></td>
+                  <td style="color:#94a3b8">—</td>
+                  <td><button type="button" class="btn btn-sm btn-warn">ปิดรอบ</button></td>
+                </tr>
+                <tr>
+                  <td colspan="7" style="text-align:center;color:#94a3b8;font-style:italic;font-size:0.85rem;padding:0.75rem">
+                    แสดง 5 จากทั้งหมด — มี 1M (12 periods) และ 1Q (4 periods) ใน ปี 2568
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="action-note">
+            * ปุ่ม <strong>ปิดรอบ</strong> และ <strong>เปิดรอบอีกครั้ง</strong> แสดงเฉพาะผู้ใช้ที่มีสิทธิ์ Super Admin เท่านั้น<br />
+            * การปิดรอบแล้วจะไม่สามารถบันทึกรายการบัญชีย้อนหลังในรอบนั้นได้
+          </p>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- ── Generate Fiscal Periods Modal ── -->
+    <div class="modal-backdrop" id="generateModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>สร้างรอบบัญชีใหม่</h2>
+          <button class="modal-close" id="modalClose">✕</button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Step 1: Year + Granularity + StartMonth -->
+          <div id="stepInput">
+            <div class="grid-2" style="gap:0.75rem;margin-bottom:1rem">
+              <div class="field">
+                <span class="label">ปีบัญชี (พ.ศ.) <span style="color:#dc2626">*</span></span>
+                <input class="input" type="number" id="yearInput" value="2569" min="2500" max="2600" />
+              </div>
+              <div class="field">
+                <span class="label">รูปแบบรอบบัญชี <span style="color:#dc2626">*</span></span>
+                <select class="input" id="granularityInput">
+                  <option value="1M" selected>รายเดือน (12 รอบ/ปี)</option>
+                  <option value="1Q">รายไตรมาส (4 รอบ/ปี)</option>
+                  <option value="1H">ครึ่งปี (2 รอบ/ปี)</option>
+                  <option value="1Y">รายปี (1 รอบ/ปี)</option>
+                </select>
+              </div>
+              <div class="field">
+                <span class="label">เดือนเริ่มต้นปีบัญชี</span>
+                <select class="input" id="startMonthInput">
+                  <option value="1" selected>มกราคม (ค่าจากบริษัท)</option>
+                  <option value="4">เมษายน</option>
+                  <option value="7">กรกฎาคม</option>
+                  <option value="10">ตุลาคม</option>
+                </select>
+                <div style="font-size:0.75rem;color:#64748b;margin-top:0.3rem">ค่าเริ่มต้นจาก company_settings · เปลี่ยนเฉพาะ generate ครั้งนี้</div>
+              </div>
+              <div class="field">
+                <span class="label">วันเริ่มต้นในเดือน</span>
+                <input class="input" type="number" id="startDayInput" value="1" min="1" max="28" style="width:90px" />
+                <div style="font-size:0.75rem;color:#64748b;margin-top:0.3rem">1–28 · วันที่ 1 = เริ่มต้นเดือน · เปลี่ยนเฉพาะ generate ครั้งนี้</div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btnPreview">ดูตัวอย่างก่อนสร้าง →</button>
+          </div>
+
+          <!-- Step 2: Preview periods -->
+          <div id="stepPreview" style="display:none">
+            <div style="font-size:0.875rem;color:#475569;margin-bottom:0.5rem">
+              ระบบจะสร้างรอบบัญชีสำหรับ <strong id="previewYear"></strong>:
+            </div>
+            <div style="max-height:240px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px">
+              <table class="preview-table" id="previewTable">
+                <thead>
+                  <tr><th>รอบบัญชี</th><th>วันเริ่มต้น</th><th>วันสิ้นสุด</th><th>สถานะ</th></tr>
+                </thead>
+                <tbody id="previewBody"></tbody>
+              </table>
+            </div>
+            <div class="alert-warn" id="partialWarn" style="display:none">
+              ⚠ บางเดือนมีอยู่แล้ว — ระบบจะ skip เดือนเหล่านั้นและสร้างเฉพาะเดือนที่ยังไม่มี
+            </div>
+            <div class="alert-err" id="fullExistErr" style="display:none">
+              ✕ ปีนี้มีรอบบัญชีครบ 12 เดือนแล้ว — ไม่สามารถ generate ซ้ำได้ (409)
+            </div>
+          </div>
+
+          <!-- Step 3: Success result -->
+          <div id="stepSuccess" style="display:none">
+            <div style="text-align:center;padding:1.5rem 0">
+              <div style="font-size:2rem;margin-bottom:0.5rem">✅</div>
+              <div style="font-weight:600;color:#065f46;margin-bottom:0.25rem">สร้างรอบบัญชีสำเร็จ</div>
+              <div style="font-size:0.875rem;color:#475569" id="successMsg"></div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer" id="modalFooter">
+          <button type="button" class="btn btn-ghost" id="btnModalCancel">ยกเลิก</button>
+          <button type="button" class="btn btn-primary" id="btnGenerate" style="display:none">สร้างรอบบัญชี</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        // Dark mode
+        var d = document.getElementById("previewDarkMode");
+        if (d) d.addEventListener("change", function () {
+          document.documentElement.classList.toggle("dark", d.checked);
+        });
+
+        // ── Config ──
+        var MONTHS_TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+        var MONTH_FULL_TH = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+        var MONTH_EN_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        var DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31];
+
+        var GRAN_COUNT = { "1M": 12, "1Q": 4, "1H": 2, "1Y": 1 };
+        var GRAN_LABEL = { "1M": "รายเดือน", "1Q": "รายไตรมาส", "1H": "ครึ่งปี", "1Y": "รายปี" };
+        var GRAN_MONTHS = { "1M": 1, "1Q": 3, "1H": 6, "1Y": 12 };
+
+        // Mock: existing periods per (thYear, gran) — periodNo array
+        var EXISTING = {
+          "2568_1M": [1,2,3,4],
+          "2567_1M": [1,2,3,4,5,6,7,8,9,10,11,12],
+          "2568_1Q": []
+        };
+
+        function ceYear(ty) { return ty - 543; }
+
+        function addMonths(baseMonth0, offset) {
+          return (baseMonth0 + offset) % 12; // 0-indexed
+        }
+
+        function daysInMonth(m0, year) {
+          if (m0 === 1) return (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 29 : 28;
+          return DAYS_IN_MONTH[m0];
+        }
+
+        function buildPeriodLabel(gran, periodNo, startM0, startDay, thYear) {
+          var span = GRAN_MONTHS[gran];
+          var nextStartM0 = addMonths(startM0, span);
+          // endDate = startDate of next period - 1 day
+          var endM0  = startDay === 1 ? addMonths(startM0, span - 1) : addMonths(startM0, span);
+          var endDay = startDay === 1
+            ? daysInMonth(endM0, ceYear(thYear))
+            : startDay - 1;
+          if (gran === "1M") {
+            if (startDay === 1) return MONTHS_TH[startM0] + " " + thYear;
+            return MONTHS_TH[startM0] + " " + startDay + " – " + MONTHS_TH[endM0] + " " + endDay + " (" + thYear + ")";
+          }
+          var endLabel = MONTH_EN_SHORT[endM0] + (startDay > 1 ? " " + endDay : "");
+          var startLabel = MONTH_EN_SHORT[startM0] + (startDay > 1 ? " " + startDay : "");
+          if (gran === "1Q") return "Q" + periodNo + " FY" + thYear + " (" + startLabel + "–" + endLabel + ")";
+          if (gran === "1H") return "H" + periodNo + " FY" + thYear + " (" + startLabel + "–" + endLabel + ")";
+          return "FY" + thYear + " (" + startLabel + "–" + endLabel + ")";
+        }
+
+        function buildPreview(thYear, gran, startMonthInput, startDayInput) {
+          var startM0  = (parseInt(startMonthInput) - 1 + 12) % 12;
+          var startDay = Math.min(Math.max(parseInt(startDayInput) || 1, 1), 28);
+          var totalCount = GRAN_COUNT[gran];
+          var key = thYear + "_" + gran;
+          var existing = EXISTING[key] || [];
+          var isFull = existing.length >= totalCount;
+          var isPartial = existing.length > 0 && !isFull;
+
+          document.getElementById("previewYear").textContent =
+            "ปี " + thYear + " · " + GRAN_LABEL[gran] +
+            " · เริ่ม" + MONTH_FULL_TH[startM0] + " วันที่ " + startDay;
+          document.getElementById("partialWarn").style.display = isPartial ? "" : "none";
+          document.getElementById("fullExistErr").style.display = isFull ? "" : "none";
+          document.getElementById("btnGenerate").style.display = isFull ? "none" : "";
+
+          var tbody = document.getElementById("previewBody");
+          tbody.innerHTML = "";
+          var span = GRAN_MONTHS[gran];
+
+          for (var p = 1; p <= totalCount; p++) {
+            var periodStartM0 = addMonths(startM0, (p - 1) * span);
+            var isSkip = existing.indexOf(p) !== -1;
+            var label = buildPeriodLabel(gran, p, periodStartM0, startDay, thYear);
+
+            // startDate of this period
+            var startStr = MONTHS_TH[periodStartM0] + " " + startDay + ", " + thYear;
+            // endDate = startDate of next period - 1 day
+            var nextM0  = addMonths(startM0, p * span);
+            var endDateStr;
+            if (startDay === 1) {
+              var endM0 = addMonths(startM0, p * span - 1);
+              endDateStr = MONTHS_TH[endM0] + " " + daysInMonth(endM0, ceYear(thYear)) + ", " + thYear;
+            } else {
+              endDateStr = MONTHS_TH[nextM0] + " " + (startDay - 1) + ", " + thYear;
+            }
+
+            var tr = document.createElement("tr");
+            if (isSkip) tr.className = "skip";
+            tr.innerHTML =
+              "<td>" + label + "</td>" +
+              "<td>" + startStr + "</td>" +
+              "<td>" + endDateStr + "</td>" +
+              "<td>" + (isSkip
+                ? '<span class="skip-badge">มีอยู่แล้ว</span>'
+                : '<span class="new-badge">สร้างใหม่</span>') + "</td>";
+            tbody.appendChild(tr);
+          }
+        }
+
+        // Open modal (page-level generate button)
+        document.querySelector(".page-header .btn-primary").addEventListener("click", function () {
+          document.getElementById("generateModal").classList.add("open");
+          resetModal();
+        });
+
+        function resetModal() {
+          document.getElementById("stepInput").style.display = "";
+          document.getElementById("stepPreview").style.display = "none";
+          document.getElementById("stepSuccess").style.display = "none";
+          document.getElementById("btnGenerate").style.display = "none";
+          document.getElementById("btnModalCancel").textContent = "ยกเลิก";
+        }
+
+        function closeModal() {
+          document.getElementById("generateModal").classList.remove("open");
+          resetModal();
+        }
+
+        document.getElementById("modalClose").addEventListener("click", closeModal);
+        document.getElementById("btnModalCancel").addEventListener("click", closeModal);
+        document.getElementById("generateModal").addEventListener("click", function (e) {
+          if (e.target === this) closeModal();
+        });
+
+        // Preview step
+        document.getElementById("btnPreview").addEventListener("click", function () {
+          var thYear = parseInt(document.getElementById("yearInput").value);
+          var gran = document.getElementById("granularityInput").value;
+          var startMonth = document.getElementById("startMonthInput").value;
+          var startDay = document.getElementById("startDayInput").value;
+          if (!thYear || thYear < 2500 || thYear > 2600) {
+            alert("กรุณาระบุปี พ.ศ. ที่ถูกต้อง (2500–2600)"); return;
+          }
+          if (parseInt(startDay) < 1 || parseInt(startDay) > 28) {
+            alert("วันเริ่มต้นต้องอยู่ระหว่าง 1–28"); return;
+          }
+          buildPreview(thYear, gran, startMonth, startDay);
+          document.getElementById("stepInput").style.display = "none";
+          document.getElementById("stepPreview").style.display = "";
+        });
+
+        // Generate (simulate success)
+        document.getElementById("btnGenerate").addEventListener("click", function () {
+          var thYear = parseInt(document.getElementById("yearInput").value);
+          var gran = document.getElementById("granularityInput").value;
+          var key = thYear + "_" + gran;
+          var existing = EXISTING[key] || [];
+          var total = GRAN_COUNT[gran];
+          var newCount = total - existing.length;
+          document.getElementById("stepPreview").style.display = "none";
+          document.getElementById("btnGenerate").style.display = "none";
+          document.getElementById("stepSuccess").style.display = "";
+          document.getElementById("successMsg").textContent =
+            GRAN_LABEL[gran] + " · ปี " + thYear +
+            " · สร้างใหม่ " + newCount + " รอบ" +
+            (existing.length > 0 ? " · skip " + existing.length + " รอบ (มีอยู่แล้ว)" : "");
+          document.getElementById("btnModalCancel").textContent = "ปิด";
+        });
+
+      })();
+    </script>
+  </body>
+</html>

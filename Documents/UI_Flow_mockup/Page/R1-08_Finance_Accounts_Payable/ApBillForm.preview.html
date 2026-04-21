@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance — สร้าง AP Bill — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      .vendor-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; place-items: center; }
+      .vendor-modal-backdrop.open { display: grid; }
+      .items-table th, .items-table td { padding: 6px 8px; }
+      .items-table input { width: 100%; }
+      .vendor-dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 10; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,.1); margin-top: 2px; }
+      .vendor-dropdown-item { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+      .vendor-dropdown-item:hover { background: var(--muted); }
+      .vendor-dropdown-divider { border-top: 1px solid var(--border); }
+      .vendor-dropdown-create { padding: 8px 12px; cursor: pointer; font-size: 13px; color: var(--primary); font-weight: 500; }
+      .vendor-dropdown-create:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); }
+      .vendor-field-wrap { position: relative; }
+      .summary-row { display: flex; justify-content: flex-end; gap: 24px; padding: 8px 12px; font-size: 13px; }
+      .summary-row .total-label { color: var(--muted-foreground); }
+      .summary-row .total-val { font-weight: 600; min-width: 80px; text-align: right; }
+      .vendor-block-error { display: none; border: 1px solid var(--destructive); background: color-mix(in srgb, var(--destructive) 8%, transparent); border-radius: var(--radius-md); padding: 12px; font-size: 13px; }
+      .vendor-block-error.open { display: block; }
+      .form-main.disabled { opacity: 0.55; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — ApBillFormPage (<code>/finance/ap/new</code>)</span>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <label class="preview-toggle"><input type="checkbox" id="toggleVendorError" /> Vendor options error</label>
+        <label class="preview-toggle"><input type="checkbox" id="toggleVendorDrop" /> Vendor dropdown</label>
+        <label class="preview-toggle"><input type="checkbox" id="toggleVendorModal" /> Modal vendor ใหม่</label>
+        <label class="preview-toggle"><input type="checkbox" id="toggleSubmitting" /> กำลังบันทึก</label>
+        <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+      </div>
+    </div>
+
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link" href="#">เจ้าหนี้</a>
+        </nav>
+      </aside>
+
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">เจ้าหนี้ (AP) — สร้างบิล</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">สร้าง AP Bill</h1>
+              <p style="margin:4px 0 0;font-size:13px;color:var(--muted-foreground)">บันทึกใบแจ้งหนี้จากผู้ขายพร้อมรายการบรรทัด (Sub-flow 4)</p>
+            </div>
+            <div class="actions">
+              <a class="btn btn-sm" href="#">← กลับรายการ</a>
+            </div>
+          </div>
+
+          <div id="vendorErrorBlock" class="vendor-block-error" role="alert">
+            โหลดรายชื่อผู้ขายไม่สำเร็จ — <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px">ลองใหม่</button>
+          </div>
+
+          <div class="card card-pad stack-y-4 form-main" id="formMain">
+            <div class="grid-2">
+              <div class="field field-span-full">
+                <span class="label">ผู้ขาย <span style="color:var(--destructive)">*</span></span>
+                <div class="vendor-field-wrap">
+                  <input class="input" id="vendorSearch" placeholder="พิมพ์เพื่อค้นหาผู้ขาย..." autocomplete="off" />
+                  <div class="vendor-dropdown" id="vendorDropdown" style="display:none">
+                    <div class="vendor-dropdown-item">V001 — Supplier A (บจก. เอ)</div>
+                    <div class="vendor-dropdown-item">V002 — Supplier B (หจก. บี)</div>
+                    <div class="vendor-dropdown-item">V003 — Supplier C</div>
+                    <div class="vendor-dropdown-divider"></div>
+                    <div class="vendor-dropdown-create" id="btnOpenVendorModal">＋ สร้างผู้ขายใหม่...</div>
+                  </div>
+                </div>
+                <div class="hint">จาก <code>GET /api/finance/vendors/options</code> — หรือสร้างใหม่ (Sub-flow 7)</div>
+              </div>
+
+              <div class="field">
+                <span class="label">เลขที่ใบกำกับผู้ขาย</span>
+                <input class="input" placeholder="เช่น INV-2026-001" />
+              </div>
+              <div class="field">
+                <span class="label">วันที่ออกใบแจ้งหนี้ <span style="color:var(--destructive)">*</span></span>
+                <input class="input" type="date" />
+              </div>
+              <div class="field">
+                <span class="label">วันครบกำหนด <span style="color:var(--destructive)">*</span></span>
+                <input class="input" type="date" />
+              </div>
+              <div class="field field-span-full">
+                <span class="label">หมายเหตุ</span>
+                <input class="input" placeholder="ถ้ามี" />
+              </div>
+            </div>
+
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:13px;font-weight:600">รายการบรรทัด</span>
+                <button type="button" class="btn btn-sm">+ เพิ่มแถว</button>
+              </div>
+              <div class="table-wrap">
+                <table class="data items-table">
+                  <thead>
+                    <tr>
+                      <th>รายละเอียด <span style="color:var(--destructive)">*</span></th>
+                      <th class="text-right" style="width:100px">จำนวน <span style="color:var(--destructive)">*</span></th>
+                      <th class="text-right" style="width:120px">ราคา/หน่วย <span style="color:var(--destructive)">*</span></th>
+                      <th class="text-right" style="width:110px">ยอด</th>
+                      <th style="width:40px"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input class="input" value="บริการ IT รายเดือน" /></td>
+                      <td class="text-right"><input class="input" type="number" value="1" style="text-align:right" /></td>
+                      <td class="text-right"><input class="input" type="number" value="9000" style="text-align:right" /></td>
+                      <td class="text-right" style="font-size:13px">฿9,000.00</td>
+                      <td><button type="button" class="btn btn-ghost btn-sm" style="color:var(--destructive)">✕</button></td>
+                    </tr>
+                    <tr>
+                      <td><input class="input" value="ค่าซอฟต์แวร์ใบอนุญาต" /></td>
+                      <td class="text-right"><input class="input" type="number" value="3" style="text-align:right" /></td>
+                      <td class="text-right"><input class="input" type="number" value="500" style="text-align:right" /></td>
+                      <td class="text-right" style="font-size:13px">฿1,500.00</td>
+                      <td><button type="button" class="btn btn-ghost btn-sm" style="color:var(--destructive)">✕</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="summary-row">
+                <span class="total-label">ยอดรวม</span>
+                <span class="total-val">฿10,500.00</span>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--border)">
+              <button type="button" class="btn btn-primary btn-sm" id="btnSave">บันทึกบิล</button>
+              <button type="button" class="btn btn-sm">ยกเลิก</button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="vendorModalBackdrop" class="vendor-modal-backdrop" role="presentation">
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="vendorModalTitle" style="max-width:480px;width:100%">
+        <div class="modal-dialog__head">
+          <h2 id="vendorModalTitle" style="margin:0;font-size:16px">สร้างผู้ขายใหม่</h2>
+        </div>
+        <div class="modal-dialog__body stack-y-4">
+          <div class="grid-2">
+            <div class="field field-span-full">
+              <span class="label">ชื่อผู้ขาย <span style="color:var(--destructive)">*</span></span>
+              <input class="input" placeholder="ชื่อบริษัท / บุคคล" />
+            </div>
+            <div class="field">
+              <span class="label">เลขประจำตัวผู้เสียภาษี</span>
+              <input class="input" placeholder="13 หลัก" />
+            </div>
+            <div class="field">
+              <span class="label">รหัสผู้ขาย (vendor code)</span>
+              <input class="input" placeholder="เช่น V004" />
+            </div>
+            <div class="field field-span-full">
+              <span class="label">ที่อยู่</span>
+              <input class="input" placeholder="ถ้ามี" />
+            </div>
+            <div class="field">
+              <span class="label">เบอร์โทร</span>
+              <input class="input" />
+            </div>
+            <div class="field">
+              <span class="label">อีเมล</span>
+              <input class="input" type="email" />
+            </div>
+          </div>
+          <div class="hint">หลังบันทึกสำเร็จ ผู้ขายใหม่จะถูกเลือกในฟอร์มทันที</div>
+        </div>
+        <div class="modal-dialog__foot" style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn btn-sm" id="btnCloseVendorModal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary btn-sm">บันทึกผู้ขาย</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var dark = document.getElementById("previewDarkMode");
+        function syncDark() { document.documentElement.classList.toggle("dark", dark.checked); }
+        dark.addEventListener("change", syncDark); syncDark();
+
+        var vendorErr = document.getElementById("toggleVendorError");
+        var errBlock = document.getElementById("vendorErrorBlock");
+        var formMain = document.getElementById("formMain");
+        function syncVendorErr() {
+          errBlock.classList.toggle("open", vendorErr.checked);
+        }
+        vendorErr.addEventListener("change", syncVendorErr); syncVendorErr();
+
+        var submitting = document.getElementById("toggleSubmitting");
+        function syncSubmitting() {
+          formMain.classList.toggle("disabled", submitting.checked);
+          document.getElementById("btnSave").textContent = submitting.checked ? "กำลังบันทึก…" : "บันทึกบิล";
+        }
+        submitting.addEventListener("change", syncSubmitting); syncSubmitting();
+
+        var vendorDropdown = document.getElementById("vendorDropdown");
+        var vendorSearchInput = document.getElementById("vendorSearch");
+        var toggleVendorDrop = document.getElementById("toggleVendorDrop");
+        function syncVendorDrop() { vendorDropdown.style.display = toggleVendorDrop.checked ? "block" : "none"; }
+        toggleVendorDrop.addEventListener("change", syncVendorDrop); syncVendorDrop();
+        vendorSearchInput.addEventListener("focus", function () { toggleVendorDrop.checked = true; syncVendorDrop(); });
+        vendorSearchInput.addEventListener("blur", function () { setTimeout(function () { toggleVendorDrop.checked = false; syncVendorDrop(); }, 150); });
+
+        var vendorModalBackdrop = document.getElementById("vendorModalBackdrop");
+        var toggleVendorModal = document.getElementById("toggleVendorModal");
+        function syncVendorModal() { vendorModalBackdrop.classList.toggle("open", toggleVendorModal.checked); }
+        toggleVendorModal.addEventListener("change", syncVendorModal); syncVendorModal();
+        document.getElementById("btnOpenVendorModal").addEventListener("click", function () { toggleVendorModal.checked = true; syncVendorModal(); });
+        document.getElementById("btnCloseVendorModal").addEventListener("click", function () { toggleVendorModal.checked = false; syncVendorModal(); });
+      })();
+    </script>
+  </body>
+</html>

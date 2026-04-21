@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ธนาคาร — ฟอร์มบัญชี — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — BankAccountFormPage</span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">เงินสด / ธนาคาร</div>
+          <a class="nav-link active" href="#">บัญชีธนาคาร</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">บัญชีธนาคาร — แก้ไข</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">เพิ่ม / แก้ไข บัญชีธนาคาร</h1>
+            <button type="button" class="btn btn-sm">ยกเลิก</button>
+          </div>
+          <div class="card card-pad grid-2">
+            <div class="field"><span class="label">รหัสบัญชี <span class="error-text">*</span></span><input class="input" /></div>
+            <div class="field"><span class="label">ชื่อบัญชี <span class="error-text">*</span></span><input class="input" /></div>
+            <div class="field"><span class="label">ธนาคาร <span class="error-text">*</span></span><select class="text-input"><option>กสิกรไทย</option><option>ไทยพาณิชย์</option></select></div>
+            <div class="field"><span class="label">เลขที่บัญชี <span class="error-text">*</span></span><input class="input text-mono" /></div>
+            <div class="field"><span class="label">สาขา</span><input class="input" /></div>
+            <div class="field"><span class="label">ยอดยกมา</span><input class="input text-right" type="number" placeholder="0.00" /></div>
+            <div class="field field-span-full"><span class="label">เชื่อม GL</span><select class="text-input"><option>— ไม่เชื่อม —</option><option>1-1100 เงินฝากธนาคาร</option></select></div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm">บันทึก</button>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+          document.documentElement.classList.toggle("dark", d.checked);
+        }
+      })();
+    </script>
+  </body>
+</html>

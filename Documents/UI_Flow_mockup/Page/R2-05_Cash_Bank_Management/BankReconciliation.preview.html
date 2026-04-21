@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ธนาคาร — กระทบยอด — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — BankReconciliationPage</span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">เงินสด / ธนาคาร</div>
+          <a class="nav-link active" href="#">กระทบยอด</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">กระทบยอดธนาคาร</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">กระทบยอด — บัญชีหลัก</h1>
+          </div>
+          <div class="card card-pad stack-y-4">
+            <h3 class="subsection-title">รายการธนาคารสำหรับกระทบยอด</h3>
+            <p class="text-muted text-sm">เลือกรายการที่ตรงกับ bank statement แล้ว</p>
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th style="width: 40px;"><input type="checkbox" /></th>
+                    <th>วันที่</th>
+                    <th>รายละเอียด</th>
+                    <th class="text-right">จำนวน</th>
+                    <th>ประเภท</th>
+                    <th>สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" /></td>
+                    <td>10/04/2568</td>
+                    <td>โอนเข้า — ลูกค้าโอน</td>
+                    <td class="text-right">฿50,000</td>
+                    <td><span class="badge badge-blue">Deposit</span></td>
+                    <td><span class="badge">ค้างอยู่</span></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" /></td>
+                    <td>12/04/2568</td>
+                    <td>ค่าธรรมเนียม</td>
+                    <td class="text-right">฿25</td>
+                    <td><span class="badge badge-red">Withdrawal</span></td>
+                    <td><span class="badge">ค้างอยู่</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="flex-row gap-2">
+              <button type="button" class="btn btn-primary btn-sm">กระทบยอดที่เลือก</button>
+              <button type="button" class="btn btn-sm">ยกเลิก</button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+          document.documentElement.classList.toggle("dark", d.checked);
+        }
+      })();
+    </script>
+  </body>
+</html>

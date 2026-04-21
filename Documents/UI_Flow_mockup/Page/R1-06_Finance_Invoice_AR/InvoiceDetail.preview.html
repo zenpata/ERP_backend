@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance — รายละเอียดใบแจ้งหนี้ — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — InvoiceDetailPage</span>
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link active" href="#">ใบแจ้งหนี้</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">INV-2025-001</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">INV-2025-001</h1>
+            <button type="button" class="btn btn-sm">กลับ</button>
+          </div>
+          <div class="grid-2 card card-pad">
+            <div>
+              <div class="text-muted text-xs">ลูกค้า</div>
+              <div class="font-medium">บริษัท ตัวอย่าง จำกัด</div>
+            </div>
+            <div>
+              <div class="text-muted text-xs">สถานะ</div>
+              <span class="badge badge-warn">sent</span>
+            </div>
+            <div>
+              <div class="text-muted text-xs">วันออก</div>
+              <div>01/04/2568</div>
+            </div>
+            <div>
+              <div class="text-muted text-xs">ครบกำหนด</div>
+              <div>30/04/2568</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>รายละเอียด</th>
+                  <th class="text-right">จำนวน</th>
+                  <th class="text-right">ราคา</th>
+                  <th class="text-right">จำนวนเงิน</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>บริการที่ปรึกษา</td>
+                  <td class="text-right">10</td>
+                  <td class="text-right">฿10,000</td>
+                  <td class="text-right">฿100,000</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="text-right text-muted">Subtotal</td>
+                  <td class="text-right">฿100,000</td>
+                </tr>
+                <tr>
+                  <td colspan="3" class="text-right text-muted">VAT</td>
+                  <td class="text-right">฿7,000</td>
+                </tr>
+                <tr>
+                  <td colspan="3" class="text-right row-total">Total</td>
+                  <td class="text-right row-total">฿107,000</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById("previewDarkMode");
+        if (!el) return;
+        function s() {
+          document.documentElement.classList.toggle("dark", el.checked);
+        }
+        el.addEventListener("change", s);
+        s();
+      })();
+    </script>
+  </body>
+</html>

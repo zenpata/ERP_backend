@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR — Aging Report — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      .breadcrumb { font-size: 12px; color: var(--muted-foreground); display: flex; align-items: center; gap: 6px; }
+      .breadcrumb a { color: var(--primary); text-decoration: none; }
+      .state-toggle { display: flex; gap: 6px; flex-wrap: wrap; }
+      .state-btn { font-size: 11px; padding: 3px 10px; border: 1px solid var(--border);
+        border-radius: var(--radius-sm); background: var(--card); color: var(--muted-foreground); cursor: pointer; }
+      .state-btn.active { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+      .export-btn-disabled { opacity: 0.4; pointer-events: none; }
+      .bucket-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+      .bucket-tile { border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--card); padding: 12px 14px; }
+      .bucket-tile__label { font-size: 11px; color: var(--muted-foreground); margin-bottom: 4px; }
+      .bucket-tile__value { font-size: 16px; font-weight: 700; }
+      .bucket-tile--warn .bucket-tile__value { color: #d97706; }
+      .bucket-tile--danger .bucket-tile__value { color: var(--destructive); }
+      .bucket-tile--total .bucket-tile__value { color: var(--foreground); }
+      .row-total { font-weight: 600; border-top: 2px solid var(--border); }
+      .disclaimer-banner { display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+        background: var(--warning-bg); border: 1px solid var(--warning-border);
+        border-radius: var(--radius-md); font-size: 12px; color: var(--warning-fg); }
+      .text-muted { color: var(--muted-foreground); }
+    </style>
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — ARAgingReportPage · <code>/finance/reports/ar-aging</code></span>
+      <span class="state-toggle">
+        <button class="state-btn active" onclick="showState('default',this)">Default</button>
+        <button class="state-btn" onclick="showState('loading',this)">Loading</button>
+        <button class="state-btn" onclick="showState('empty',this)">Empty</button>
+        <button class="state-btn" onclick="showState('error',this)">Error</button>
+      </span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link" href="#">รายงาน (Hub)</a>
+          <a class="nav-link active" href="#">อายุลูกหนี้ (AR Aging)</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">รายงานอายุลูกหนี้</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content main-content--relative stack-y-6" id="mainContent">
+
+          <!-- Breadcrumb -->
+          <div class="breadcrumb">
+            <a href="#">รายงาน</a>
+            <span>/</span>
+            <span>อายุลูกหนี้</span>
+          </div>
+
+          <!-- Page header + Export (disabled until report loaded) -->
+          <div class="page-header">
+            <h1 class="m-0">รายงานอายุลูกหนี้ (AR Aging)</h1>
+            <button type="button" class="btn btn-sm export-btn-disabled" id="exportBtn">Export</button>
+          </div>
+
+          <!-- Filter bar — asOfDate (required, point-in-time) + customerId (optional) -->
+          <div class="card card-pad">
+            <div class="flex-row filter-toolbar--tight" style="align-items:flex-end; gap:12px; flex-wrap:wrap;">
+              <div class="field field--bare">
+                <label class="field-label">ณ วันที่ <span class="text-destructive">*</span></label>
+                <p style="font-size:11px; color:var(--muted-foreground); margin:2px 0 6px;">คำนวณอายุหนี้ ณ วันที่ระบุ</p>
+                <input class="input input-max-w-sm" type="date" value="2026-04-18" />
+              </div>
+              <div class="field field--bare">
+                <label class="field-label">ลูกค้า <span class="text-muted" style="font-weight:400;">(ไม่บังคับ)</span></label>
+                <input class="input input-max-w-sm" type="text" placeholder="ค้นหาชื่อหรือรหัสลูกค้า…" />
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" onclick="loadReport()" style="margin-top:auto;">ดูรายงาน</button>
+            </div>
+          </div>
+
+          <!-- === DEFAULT STATE === -->
+          <div id="state-default">
+
+            <!-- Disclaimer (when source data is not final-closed) -->
+            <div class="disclaimer-banner" style="margin-bottom:12px;">
+              ℹ ข้อมูลอ้างอิง ณ 18 เม.ย. 2569 · ยอดบางรายการอาจยังไม่ final close · สร้างรายงานเมื่อ 09:42
+            </div>
+
+            <!-- Bucket summary tiles -->
+            <div class="card card-pad" style="margin-bottom:12px;">
+              <div class="bucket-summary">
+                <div class="bucket-tile">
+                  <div class="bucket-tile__label">0–30 วัน</div>
+                  <div class="bucket-tile__value">฿50,000</div>
+                </div>
+                <div class="bucket-tile bucket-tile--warn">
+                  <div class="bucket-tile__label">31–60 วัน</div>
+                  <div class="bucket-tile__value">฿47,000</div>
+                </div>
+                <div class="bucket-tile bucket-tile--danger">
+                  <div class="bucket-tile__label">61–90 วัน</div>
+                  <div class="bucket-tile__value">฿20,000</div>
+                </div>
+                <div class="bucket-tile bucket-tile--danger">
+                  <div class="bucket-tile__label">90+ วัน</div>
+                  <div class="bucket-tile__value">฿8,000</div>
+                </div>
+                <div class="bucket-tile bucket-tile--total" style="border-color: var(--primary);">
+                  <div class="bucket-tile__label">รวมทั้งหมด</div>
+                  <div class="bucket-tile__value">฿125,000</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AR Aging table — rows[] from API, totals row from totals{} -->
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>รหัส</th>
+                    <th>ลูกค้า</th>
+                    <th class="text-right">0–30 วัน</th>
+                    <th class="text-right">31–60 วัน</th>
+                    <th class="text-right">61–90 วัน</th>
+                    <th class="text-right">90+ วัน</th>
+                    <th class="text-right">รวม</th>
+                    <th class="text-right">ใบแจ้งหนี้</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-size:12px; color:var(--muted-foreground);">CUST-001</td>
+                    <td>บริษัท ตัวอย่าง จำกัด</td>
+                    <td class="text-right">฿50,000</td>
+                    <td class="text-right">฿12,000</td>
+                    <td class="text-right">฿0</td>
+                    <td class="text-right" style="color:var(--destructive);">฿8,000</td>
+                    <td class="text-right"><strong>฿70,000</strong></td>
+                    <td class="text-right" style="color:var(--muted-foreground);">3</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:12px; color:var(--muted-foreground);">CUST-002</td>
+                    <td>ห้างหุ้นส่วน สมใจ</td>
+                    <td class="text-right">฿0</td>
+                    <td class="text-right">฿35,000</td>
+                    <td class="text-right" style="color:var(--destructive);">฿20,000</td>
+                    <td class="text-right">฿0</td>
+                    <td class="text-right"><strong>฿55,000</strong></td>
+                    <td class="text-right" style="color:var(--muted-foreground);">2</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:12px; color:var(--muted-foreground);">CUST-003</td>
+                    <td>ร้าน ดีมาก</td>
+                    <td class="text-right">฿0</td>
+                    <td class="text-right">฿0</td>
+                    <td class="text-right">฿0</td>
+                    <td class="text-right">฿0</td>
+                    <td class="text-right"><strong>฿0</strong></td>
+                    <td class="text-right" style="color:var(--muted-foreground);">0</td>
+                  </tr>
+                  <!-- totals row — bound from data.totals{} -->
+                  <tr class="row-total">
+                    <td colspan="2">รวมทั้งหมด</td>
+                    <td class="text-right">฿50,000</td>
+                    <td class="text-right">฿47,000</td>
+                    <td class="text-right" style="color:var(--destructive);">฿20,000</td>
+                    <td class="text-right" style="color:var(--destructive);">฿8,000</td>
+                    <td class="text-right">฿125,000</td>
+                    <td class="text-right" style="color:var(--muted-foreground);">5</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- === LOADING STATE === -->
+          <div id="state-loading" style="display:none;">
+            <div style="position:relative; min-height:240px; border-radius:var(--radius-xl); border:1px solid var(--border); background:var(--card); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px;">
+              <div class="spinner"></div>
+              <span class="overlay-busy__text">กำลังโหลดรายงานอายุลูกหนี้…</span>
+            </div>
+          </div>
+
+          <!-- === EMPTY STATE === -->
+          <div id="state-empty" style="display:none;">
+            <div class="card card-pad" style="text-align:center; padding:48px 24px; color:var(--muted-foreground);">
+              <div style="font-size:36px; margin-bottom:12px;">📭</div>
+              <p style="font-size:14px; font-weight:600; margin:0 0 6px;">ไม่มีลูกหนี้ค้างชำระ ณ วันที่เลือก</p>
+              <p style="font-size:12px; margin:0;">ลองเปลี่ยนวันที่อ้างอิง หรือตรวจสอบว่ามีใบแจ้งหนี้ที่ยังค้างชำระในระบบ</p>
+            </div>
+          </div>
+
+          <!-- === ERROR STATE === -->
+          <div id="state-error" style="display:none;">
+            <div class="card card-pad" style="border-color:var(--destructive); text-align:center; padding:40px 24px;">
+              <div style="font-size:32px; margin-bottom:10px;">⚠</div>
+              <p style="font-size:14px; font-weight:600; margin:0 0 6px; color:var(--destructive);">โหลดรายงานไม่สำเร็จ</p>
+              <p style="font-size:12px; color:var(--muted-foreground); margin:0 0 16px;">กรุณาลองใหม่ — filter ที่เลือกยังคงอยู่</p>
+              <button type="button" class="btn btn-primary btn-sm">ลองใหม่</button>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) { d.addEventListener("change", function () { document.documentElement.classList.toggle("dark", d.checked); }); }
+
+        var states = ["default","loading","empty","error"];
+
+        window.showState = function(name, btn) {
+          states.forEach(function(s) { var el = document.getElementById("state-" + s); if (el) el.style.display = "none"; });
+          document.querySelectorAll(".state-btn").forEach(function(b) { b.classList.remove("active"); });
+          if (btn) btn.classList.add("active");
+          var el = document.getElementById("state-" + name);
+          if (el) el.style.display = "";
+          document.getElementById("exportBtn").classList[name === "default" ? "remove" : "add"]("export-btn-disabled");
+        };
+
+        window.loadReport = function() { showState("default", document.querySelector(".state-btn")); };
+      })();
+    </script>
+  </body>
+</html>

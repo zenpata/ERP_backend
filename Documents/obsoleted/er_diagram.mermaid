@@ -1,0 +1,46 @@
+erDiagram
+
+    PROJECT_BUDGET {
+        auto    Budget_ID       PK  "BDG-001, BDG-002..."
+        string  Project_Name
+        number  Total_Budget_THB
+        enum    Budget_Type         "Fixed Price | Time and Material | Retainer"
+        enum    Status              "Draft | Approved | Active | On Hold | Closed"
+        date    Start_Date
+        date    End_Date
+        multi   Module              "HR | Finance | PM | Integration | Other"
+        string  Owner
+        text    Notes
+    }
+
+    EXPENSE_RECORDS {
+        auto    Expense_ID      PK  "EXP-001, EXP-002..."
+        string  Expense_Name
+        ref     Project_Budget  FK
+        number  Amount_THB
+        date    Expense_Date
+        enum    Category            "Equipment | Labor | Travel | Software-License | Office Supply | Training | Other"
+        enum    Payment_Method      "Transfer | Cash | Credit Card | Cheque"
+        enum    Status              "Draft | Pending Approval | Approved | Paid | Rejected"
+        string  Requested_By
+        string  Approved_By
+        file    Receipt_Doc
+        text    Notes
+    }
+
+    PROJECT_PROGRESS {
+        auto    Task_ID         PK  "TSK-001, TSK-002..."
+        string  Task_Feature
+        enum    Module              "HR | Finance | PM | Integration | UAT | Other"
+        enum    Phase               "Analysis | Design | Development | Testing | UAT | Go-Live"
+        enum    Status              "Not Started | In Progress | On Hold | Done | Cancelled"
+        enum    Priority            "High | Medium | Low"
+        number  Progress_Percent
+        date    Start_Date
+        date    Target_Date
+        date    Actual_End_Date
+        string  Assignee
+        text    Notes
+    }
+
+    PROJECT_BUDGET ||--o{ EXPENSE_RECORDS : "has expenses"

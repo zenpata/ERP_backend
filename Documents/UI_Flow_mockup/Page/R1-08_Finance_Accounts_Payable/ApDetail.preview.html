@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance — รายละเอียด AP — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      /* Badge colours (same set as ApList) */
+      .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; gap: 4px; }
+      .badge-draft     { background: var(--muted);      color: var(--muted-foreground); border: 1px solid var(--border); }
+      .badge-submitted { background: #dbeafe;            color: #1e40af;  border: 1px solid #93c5fd; }
+      .badge-approved  { background: var(--success-bg); color: var(--success-fg); border: 1px solid #86efac; }
+      .badge-rejected  { background: #fee2e2;            color: #991b1b;  border: 1px solid #fca5a5; }
+      .badge-partial   { background: #fef3c7;            color: #92400e;  border: 1px solid #fcd34d; }
+      .badge-paid      { background: #f0fdf4;            color: #166534;  border: 1px solid #4ade80; font-weight:600; }
+
+      /* Sticky action bar at bottom of content area */
+      .action-bar {
+        position: sticky;
+        bottom: 0;
+        background: var(--card);
+        border-top: 1px solid var(--border);
+        padding: 12px 24px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        z-index: 10;
+        margin: 0 -24px -24px;
+      }
+      .action-bar-spacer { flex: 1; }
+
+      /* Info grid in header card */
+      .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .info-item .info-label { font-size: 11px; color: var(--muted-foreground); margin-bottom: 2px; }
+      .info-item .info-value { font-size: 14px; font-weight: 500; }
+
+      /* Amount summary strip */
+      .amount-strip {
+        display: flex;
+        gap: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        font-size: 13px;
+      }
+      .amount-strip-cell {
+        flex: 1;
+        padding: 10px 16px;
+        border-right: 1px solid var(--border);
+        text-align: center;
+      }
+      .amount-strip-cell:last-child { border-right: none; }
+      .amount-strip-cell .as-label { font-size: 11px; color: var(--muted-foreground); }
+      .amount-strip-cell .as-value { font-size: 15px; font-weight: 700; margin-top: 2px; }
+      .amount-strip-cell.as-remaining { background: color-mix(in srgb, var(--success-bg) 60%, var(--card)); }
+      .amount-strip-cell.as-remaining .as-value { color: var(--success-fg); }
+      .amount-strip-cell.as-overdue { background: color-mix(in srgb, #fee2e2 50%, var(--card)); }
+      .amount-strip-cell.as-overdue .as-value { color: #991b1b; }
+
+      /* Status summary row */
+      .status-summary {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 10px 16px;
+        background: var(--muted);
+        border-radius: var(--radius-md);
+        font-size: 12px;
+        align-items: center;
+      }
+      .status-summary-item { display: flex; gap: 4px; align-items: center; color: var(--muted-foreground); }
+      .status-summary-item strong { color: var(--foreground); }
+
+      /* Payment modal */
+      .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; display: none; place-items: center; }
+      .modal-backdrop.open { display: grid; }
+
+      /* Remaining callout inside modal */
+      .remaining-callout {
+        background: var(--success-bg);
+        color: var(--success-fg);
+        border: 1px solid #86efac;
+        border-radius: var(--radius-md);
+        padding: 8px 12px;
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .remaining-callout strong { font-size: 16px; }
+
+      /* State demo tabs */
+      .state-tabs { display: flex; gap: 4px; flex-wrap: wrap; font-size: 12px; }
+      .state-tab { padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border); cursor: pointer; background: var(--card); color: var(--muted-foreground); }
+      .state-tab.active { background: var(--primary); color: var(--primary-foreground); border-color: transparent; }
+
+      /* Conditional visibility helpers */
+      [data-state] { display: none !important; }
+      [data-state].visible { display: flex !important; }
+      .overdue-indicator { display: none; }
+      .overdue-indicator.show { display: inline-flex; }
+    </style>
+  </head>
+  <body>
+    <!-- ── Preview controls ───────────────────────────────────────────── -->
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — ApDetailPage (ปรับปรุง UX)</span>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <!--
+          ✅ ปรับปรุง: เลือก status state เพื่อดูว่าปุ่ม actions
+          แสดง/ซ่อนต่างกันตาม state machine อย่างไร
+        -->
+        <span style="font-size:12px;color:var(--muted-foreground)">สลับ state:</span>
+        <div class="state-tabs">
+          <span class="state-tab" data-switch="draft">draft</span>
+          <span class="state-tab" data-switch="submitted">submitted</span>
+          <span class="state-tab active" data-switch="approved">approved</span>
+          <span class="state-tab" data-switch="partially_paid">partially_paid</span>
+          <span class="state-tab" data-switch="rejected">rejected</span>
+          <span class="state-tab" data-switch="paid">paid</span>
+        </div>
+        <label class="preview-toggle"><input type="checkbox" id="togglePaymentModal" /> Modal จ่ายเงิน</label>
+        <label class="preview-toggle"><input type="checkbox" id="toggleBankField" /> bank_transfer</label>
+        <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+      </div>
+    </div>
+
+    <!-- ── App shell ──────────────────────────────────────────────────── -->
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link active" href="#">เจ้าหนี้</a>
+        </nav>
+      </aside>
+
+      <div class="col-main">
+        <header class="header-bar">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button type="button" class="btn btn-ghost btn-sm">← กลับ</button>
+            <span class="header-title">AP-2025-0001</span>
+            <!--
+              ✅ ปรับปรุง: badge สีถูกต้อง
+              approved = เขียว (ไม่ใช่เหลือง/warning)
+            -->
+            <span class="badge badge-approved" id="headerBadge">approved</span>
+            <!-- isOverdue indicator -->
+            <span class="badge overdue-indicator" id="overdueTag"
+              style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5">
+              ⚠ เกินกำหนด
+            </span>
+          </div>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+
+        <main class="main-content stack-y-6">
+
+          <!-- ── Bill header info ───────────────────────────────────── -->
+          <div class="card card-pad">
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">ผู้ขาย</div>
+                <div class="info-value">V001 — Supplier A (บจก. เอ)</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">เลขที่ใบกำกับผู้ขาย</div>
+                <div class="info-value text-mono">INV-V-1042</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">วันที่ออกใบแจ้งหนี้</div>
+                <div class="info-value">01 เม.ย. 2568</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">วันครบกำหนด</div>
+                <div class="info-value">30 เม.ย. 2568</div>
+              </div>
+              <div class="info-item" style="grid-column:1/-1">
+                <div class="info-label">หมายเหตุ</div>
+                <div class="info-value" style="color:var(--muted-foreground)">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Amount summary strip ──────────────────────────────── -->
+          <!--
+            ✅ ปรับปรุง: แสดงยอดรวม / จ่ายแล้ว / คงเหลือ ชัดเจนในแถบเดียว
+            remainingAmount มาจาก API ไม่ใช่คำนวณ FE (ตาม Coverage Lock)
+          -->
+          <div class="amount-strip" id="amountStrip">
+            <div class="amount-strip-cell">
+              <div class="as-label">ยอดรวม</div>
+              <div class="as-value">฿10,500.00</div>
+            </div>
+            <div class="amount-strip-cell">
+              <div class="as-label">จ่ายแล้ว</div>
+              <div class="as-value" id="paidAmt">฿3,000.00</div>
+            </div>
+            <div class="amount-strip-cell as-remaining" id="remainingCell">
+              <div class="as-label">คงเหลือ (จาก API)</div>
+              <div class="as-value" id="remainingAmt">฿7,500.00</div>
+            </div>
+          </div>
+
+          <!-- ── statusSummary strip ───────────────────────────────── -->
+          <!--
+            ✅ เพิ่มใหม่: statusSummary ตาม Coverage Lock
+            ต้องครอบคลุม documentStatus, paymentStatus, isOverdue, lastPaymentDate
+          -->
+          <div class="status-summary">
+            <div class="status-summary-item">📄 สถานะเอกสาร: <strong id="ssDocStatus">approved</strong></div>
+            <div class="status-summary-item">💳 สถานะการจ่าย: <strong id="ssPayStatus">partially_paid</strong></div>
+            <div class="status-summary-item" id="ssOverdueWrap">⏰ เกินกำหนด: <strong id="ssOverdue" style="color:#991b1b">ไม่</strong></div>
+            <div class="status-summary-item">🕐 จ่ายล่าสุด: <strong id="ssLastPay">05/04/2568</strong></div>
+          </div>
+
+          <!-- ── Line items ─────────────────────────────────────────── -->
+          <div class="card card-pad">
+            <h3 style="margin:0 0 12px;font-size:14px;font-weight:600">รายการบรรทัด</h3>
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>รายละเอียด</th>
+                    <th class="text-right">จำนวน</th>
+                    <th class="text-right">ราคา/หน่วย</th>
+                    <th class="text-right">ยอด</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>บริการ IT รายเดือน</td>
+                    <td class="text-right">1</td>
+                    <td class="text-right">฿9,000.00</td>
+                    <td class="text-right">฿9,000.00</td>
+                  </tr>
+                  <tr>
+                    <td>ค่าซอฟต์แวร์ใบอนุญาต</td>
+                    <td class="text-right">3</td>
+                    <td class="text-right">฿500.00</td>
+                    <td class="text-right">฿1,500.00</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="3" style="text-align:right;font-weight:600;padding-right:16px">ยอดรวม</td>
+                    <td class="text-right" style="font-weight:700">฿10,500.00</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- ── Payment history ───────────────────────────────────── -->
+          <div class="card card-pad">
+            <h3 style="margin:0 0 12px;font-size:14px;font-weight:600">ประวัติการจ่าย</h3>
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>วันที่</th>
+                    <th class="text-right">จำนวนเงิน</th>
+                    <th>วิธีชำระ</th>
+                    <th>เลขที่อ้างอิง</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>05/04/2568</td>
+                    <td class="text-right">฿3,000.00</td>
+                    <td>โอนเงิน</td>
+                    <td class="text-mono">TRF-8821</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Spacer so sticky bar doesn't cover last content -->
+          <div style="height: 4px"></div>
+
+          <!-- ── Sticky action bar ──────────────────────────────────── -->
+          <!--
+            ✅ ปรับปรุง: action bar แบบ sticky ด้านล่าง
+            ปุ่มแสดง/ซ่อนตาม status + role (state machine)
+            ผู้ใช้เห็นเฉพาะ action ที่ทำได้ตอนนั้น
+          -->
+          <div class="action-bar">
+
+            <!-- draft: ส่งอนุมัติ -->
+            <button type="button" class="btn btn-primary btn-sm" data-state="draft">ส่งอนุมัติ</button>
+
+            <!-- submitted: (finance_manager) อนุมัติ + ปฏิเสธ -->
+            <button type="button" class="btn btn-primary btn-sm" data-state="submitted">อนุมัติ</button>
+            <button type="button" class="btn btn-danger btn-sm" data-state="submitted">ปฏิเสธ</button>
+
+            <!-- approved: บันทึกจ่าย + ปฏิเสธ -->
+            <button type="button" class="btn btn-primary btn-sm" data-state="approved" id="btnOpenPayment">บันทึกการจ่าย</button>
+            <button type="button" class="btn btn-danger btn-sm" data-state="approved">ปฏิเสธ</button>
+
+            <!-- partially_paid: บันทึกจ่ายต่อ -->
+            <button type="button" class="btn btn-primary btn-sm" data-state="partially_paid" id="btnOpenPayment2">บันทึกการจ่าย (ต่อ)</button>
+
+            <!-- rejected: แก้ไขและส่งใหม่ -->
+            <button type="button" class="btn btn-sm" data-state="rejected">แก้ไขและส่งใหม่</button>
+
+            <!-- paid: read-only label -->
+            <span data-state="paid" style="font-size:13px;color:var(--success-fg);font-weight:600">✓ ชำระครบแล้ว</span>
+
+            <!-- PDF always visible -->
+            <div class="action-bar-spacer"></div>
+            <button type="button" class="btn btn-sm">↓ ดาวน์โหลด PDF</button>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- ── Payment Modal ──────────────────────────────────────────────── -->
+    <!--
+      ✅ ปรับปรุง:
+      1. แสดงยอดคงเหลือจริงไว้ด้านบน modal ทันที (ไม่ต้อง scroll กลับไปดู)
+      2. เพิ่ม bankAccountId field แบบ conditional (เมื่อเลือก bank_transfer)
+    -->
+    <div id="paymentBackdrop" class="modal-backdrop" role="presentation">
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="payTitle" style="max-width:440px;width:100%">
+        <div class="modal-dialog__head">
+          <h2 id="payTitle" style="margin:0;font-size:16px">บันทึกการจ่าย</h2>
+        </div>
+        <div class="modal-dialog__body stack-y-4">
+
+          <!-- Remaining callout — ผู้ใช้รู้ทันทีว่าจ่ายได้เท่าไหร่ -->
+          <div class="remaining-callout">
+            <span>ยอดคงเหลือที่ต้องจ่าย</span>
+            <strong>฿7,500.00</strong>
+          </div>
+
+          <div class="field">
+            <span class="label">วันที่จ่าย <span style="color:var(--destructive)">*</span></span>
+            <input class="input" type="date" />
+          </div>
+          <div class="field">
+            <span class="label">จำนวนเงิน <span style="color:var(--destructive)">*</span></span>
+            <input class="input" type="number" placeholder="0.00" />
+            <div class="hint">จ่ายบางส่วนหรือเต็มจำนวน — ต้องไม่เกินยอดคงเหลือ ฿7,500.00</div>
+          </div>
+          <div class="field">
+            <span class="label">วิธีชำระ <span style="color:var(--destructive)">*</span></span>
+            <select class="text-input" id="payMethodSelect">
+              <option value="">— เลือก —</option>
+              <option value="bank_transfer">โอนเงิน (bank transfer)</option>
+              <option value="cash">เงินสด</option>
+              <option value="cheque">เช็ค</option>
+              <option value="other">อื่น ๆ</option>
+            </select>
+          </div>
+
+          <!-- bankAccountId — แสดงเฉพาะเมื่อ paymentMethod = bank_transfer -->
+          <div class="field" id="bankAccountField" style="display:none">
+            <span class="label">บัญชีธนาคาร <span style="color:var(--destructive)">*</span></span>
+            <select class="text-input">
+              <option value="">— เลือกบัญชี —</option>
+              <option>กสิกร xxx-1234 (บัญชีหลัก)</option>
+              <option>ไทยพาณิชย์ xxx-5678</option>
+            </select>
+            <div class="hint">ดึงข้อมูลจาก GET /api/finance/bank-accounts/options</div>
+          </div>
+
+          <div class="field">
+            <span class="label">เลขที่อ้างอิง</span>
+            <input class="input" placeholder="เลขที่โอน / เช็ค (ถ้ามี)" />
+          </div>
+          <div class="field">
+            <span class="label">หมายเหตุ</span>
+            <input class="input" placeholder="ถ้ามี" />
+          </div>
+        </div>
+        <div class="modal-dialog__foot" style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn btn-sm" id="closePayModal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary btn-sm">บันทึก</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        /* ── Dark mode ──────────────────────────────────────────────── */
+        var dark = document.getElementById("previewDarkMode");
+        function syncDark() { document.documentElement.classList.toggle("dark", dark.checked); }
+        dark.addEventListener("change", syncDark); syncDark();
+
+        /* ── State machine simulation ────────────────────────────────
+           Each status shows only the buttons allowed for that state.
+           Mirrors the conditional action bar logic the FE should implement.
+        ──────────────────────────────────────────────────────────── */
+        var statusConfig = {
+          draft:         { badge: "draft",         badgeClass: "badge-draft",     docStatus: "draft",         payStatus: "unpaid",         overdue: false, lastPay: "—",          paid: "฿0",        remaining: "฿10,500.00" },
+          submitted:     { badge: "submitted",     badgeClass: "badge-submitted", docStatus: "submitted",     payStatus: "unpaid",         overdue: false, lastPay: "—",          paid: "฿0",        remaining: "฿10,500.00" },
+          approved:      { badge: "approved",      badgeClass: "badge-approved",  docStatus: "approved",      payStatus: "partially_paid", overdue: false, lastPay: "05/04/2568", paid: "฿3,000.00", remaining: "฿7,500.00" },
+          partially_paid:{ badge: "partially_paid",badgeClass: "badge-partial",   docStatus: "approved",      payStatus: "partially_paid", overdue: true,  lastPay: "05/04/2568", paid: "฿3,000.00", remaining: "฿7,500.00" },
+          rejected:      { badge: "rejected",      badgeClass: "badge-rejected",  docStatus: "rejected",      payStatus: "unpaid",         overdue: false, lastPay: "—",          paid: "฿0",        remaining: "฿10,500.00" },
+          paid:          { badge: "paid",           badgeClass: "badge-paid",      docStatus: "approved",      payStatus: "paid",           overdue: false, lastPay: "12/04/2568", paid: "฿10,500.00",remaining: "฿0" },
+        };
+
+        var currentState = "approved";
+
+        function applyState(s) {
+          currentState = s;
+          var cfg = statusConfig[s];
+          /* header badge */
+          var hb = document.getElementById("headerBadge");
+          hb.textContent = cfg.badge;
+          hb.className = "badge " + cfg.badgeClass;
+          /* overdue tag */
+          document.getElementById("overdueTag").classList.toggle("show", cfg.overdue);
+          /* amount strip */
+          document.getElementById("paidAmt").textContent = cfg.paid;
+          document.getElementById("remainingAmt").textContent = cfg.remaining;
+          var rc = document.getElementById("remainingCell");
+          rc.classList.toggle("as-overdue", cfg.overdue);
+          rc.classList.toggle("as-remaining", !cfg.overdue);
+          /* status summary */
+          document.getElementById("ssDocStatus").textContent = cfg.docStatus;
+          document.getElementById("ssPayStatus").textContent = cfg.payStatus;
+          document.getElementById("ssOverdue").textContent = cfg.overdue ? "ใช่" : "ไม่";
+          document.getElementById("ssOverdue").style.color = cfg.overdue ? "#991b1b" : "";
+          document.getElementById("ssLastPay").textContent = cfg.lastPay;
+          /* action buttons */
+          document.querySelectorAll("[data-state]").forEach(function (el) {
+            el.classList.toggle("visible", el.dataset.state === s);
+          });
+          /* state tab highlight */
+          document.querySelectorAll(".state-tab").forEach(function (tab) {
+            tab.classList.toggle("active", tab.dataset.switch === s);
+          });
+        }
+
+        document.querySelectorAll(".state-tab").forEach(function (tab) {
+          tab.addEventListener("click", function () { applyState(tab.dataset.switch); });
+        });
+        applyState(currentState);
+
+        /* ── Payment modal ───────────────────────────────────────── */
+        var payBackdrop = document.getElementById("paymentBackdrop");
+        var togglePay = document.getElementById("togglePaymentModal");
+        function syncPayModal() { payBackdrop.classList.toggle("open", togglePay.checked); }
+        togglePay.addEventListener("change", syncPayModal); syncPayModal();
+        ["btnOpenPayment", "btnOpenPayment2"].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.addEventListener("click", function () { togglePay.checked = true; syncPayModal(); });
+        });
+        document.getElementById("closePayModal").addEventListener("click", function () { togglePay.checked = false; syncPayModal(); });
+
+        /* ── bankAccountId conditional field ─────────────────────── */
+        var payMethodSel = document.getElementById("payMethodSelect");
+        var bankField = document.getElementById("bankAccountField");
+        var toggleBank = document.getElementById("toggleBankField");
+        function syncBankField() {
+          var show = payMethodSel.value === "bank_transfer" || toggleBank.checked;
+          bankField.style.display = show ? "" : "none";
+        }
+        payMethodSel.addEventListener("change", syncBankField);
+        toggleBank.addEventListener("change", function () {
+          if (toggleBank.checked) payMethodSel.value = "bank_transfer";
+          syncBankField();
+        });
+        syncBankField();
+      })();
+    </script>
+  </body>
+</html>

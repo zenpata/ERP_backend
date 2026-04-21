@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body class="preview-login-bg">
+    <div class="login-center">
+      <div class="preview-stack">
+        <div class="control-panel">
+          <h2>Preview controls</h2>
+          <label class="control-row">
+            <input id="toggleBanner" type="checkbox" />
+            <span>Session expired banner</span>
+          </label>
+          <label class="control-row">
+            <input id="toggleAuthError" type="checkbox" />
+            <span>Auth error</span>
+          </label>
+          <label class="control-row">
+            <input id="toggleLoading" type="checkbox" />
+            <span>Loading</span>
+          </label>
+          <label class="control-row">
+            <input id="previewDarkMode" type="checkbox" />
+            <span>Dark mode</span>
+          </label>
+        </div>
+
+        <div class="login-card">
+          <div class="login-header">
+            <div class="login-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 6V4h6v2" />
+                <rect x="3" y="7" width="18" height="13" rx="2" />
+                <path d="M3 12h18" />
+              </svg>
+            </div>
+            <h1>ERP System</h1>
+            <p>สำหรับ SME ไทย · Modular Edition</p>
+          </div>
+
+          <form class="login-form" onsubmit="event.preventDefault()">
+            <p id="sessionBanner" class="session-banner" hidden>
+              เซสชันหมดอายุหรือถูกยกเลิก กรุณาเข้าสู่ระบบใหม่
+            </p>
+
+            <div class="grid-field">
+              <label for="email">อีเมล</label>
+              <input id="email" class="input" type="email" value="admin@erp.com" />
+            </div>
+
+            <div class="grid-field">
+              <label for="password">รหัสผ่าน</label>
+              <input id="password" class="input" type="password" value="password123" />
+            </div>
+
+            <p id="authError" class="error-text" hidden>อีเมลหรือรหัสผ่านไม่ถูกต้อง</p>
+
+            <button id="submitButton" class="btn btn-primary btn-block" type="submit">เข้าสู่ระบบ</button>
+          </form>
+
+          <div class="demo-box">
+            <div class="demo-title">บัญชีทดลอง</div>
+            <div>admin@erp.com — super_admin</div>
+            <div>hr@erp.com — hr_admin</div>
+            <div>pm@erp.com — pm_manager</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const toggleBanner = document.getElementById("toggleBanner");
+        const toggleAuthError = document.getElementById("toggleAuthError");
+        const toggleLoading = document.getElementById("toggleLoading");
+        const dark = document.getElementById("previewDarkMode");
+        const sessionBanner = document.getElementById("sessionBanner");
+        const authError = document.getElementById("authError");
+        const submitButton = document.getElementById("submitButton");
+        function sync() {
+          sessionBanner.hidden = !toggleBanner.checked;
+          authError.hidden = !toggleAuthError.checked;
+          if (toggleLoading.checked) {
+            submitButton.disabled = true;
+            submitButton.textContent = "กำลังเข้าสู่ระบบ...";
+          } else {
+            submitButton.disabled = false;
+            submitButton.textContent = "เข้าสู่ระบบ";
+          }
+          document.documentElement.classList.toggle("dark", dark.checked);
+        }
+        [toggleBanner, toggleAuthError, toggleLoading, dark].forEach((el) =>
+          el.addEventListener("change", sync)
+        );
+        sync();
+      })();
+    </script>
+  </body>
+</html>

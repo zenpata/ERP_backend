@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>รายละเอียด OT — Overtime Detail — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — OvertimeDetailPage · route: <code>/hr/overtime/:id</code></span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link" href="#">พนักงาน</a>
+          <a class="nav-link" href="#">ลาหยุด</a>
+          <div class="nav-group-label">เวลา</div>
+          <a class="nav-link" href="#">ลงเวลา</a>
+          <a class="nav-link active" href="#">ล่วงเวลา (OT)</a>
+          <a class="nav-link" href="#">ตารางเวลา</a>
+          <a class="nav-link" href="#">วันหยุด</a>
+          <div class="nav-group-label">เงินเดือน</div>
+          <a class="nav-link" href="#">รันเงินเดือน</a>
+        </nav>
+      </aside>
+
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">OT-2025-042</span>
+          <div class="header-actions">
+            <div class="avatar">HR</div>
+          </div>
+        </header>
+
+        <main class="main-content stack-y-6" style="max-width:720px">
+
+          <!-- Breadcrumb -->
+          <div class="breadcrumb">
+            <a href="#">ล่วงเวลา (OT)</a> / OT-2025-042
+          </div>
+
+          <!-- Page header -->
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">คำขอล่วงเวลา</h1>
+              <div class="flex-row mt-2">
+                <span class="badge badge-warn">รอดำเนินการ</span>
+                <span class="text-muted text-xs">ยื่นเมื่อ 15/04/2568 เวลา 17:02</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-sm">← กลับ</button>
+          </div>
+
+          <!-- OT detail card -->
+          <div class="card">
+            <div class="card-head">รายละเอียดคำขอ</div>
+            <div class="card-body">
+              <div class="grid-2">
+                <div>
+                  <div class="text-muted text-xs">พนักงาน</div>
+                  <div class="font-medium">สมชาย ใจดี</div>
+                  <div class="text-muted text-xs">EMP-001 · ฝ่ายบัญชี</div>
+                </div>
+                <div>
+                  <div class="text-muted text-xs">วันที่ทำ OT</div>
+                  <div class="font-medium">วันพุธที่ 15 เมษายน 2568</div>
+                </div>
+                <div>
+                  <div class="text-muted text-xs">ช่วงเวลา OT</div>
+                  <div class="font-medium text-mono">18:00 – 20:00</div>
+                </div>
+                <div>
+                  <div class="text-muted text-xs">จำนวนชั่วโมง</div>
+                  <div class="font-medium">2.0 ชั่วโมง</div>
+                </div>
+                <div>
+                  <div class="text-muted text-xs">ประเภท OT</div>
+                  <span class="badge badge-outline">วันธรรมดา</span>
+                </div>
+                <div>
+                  <div class="text-muted text-xs">อัตรา OT</div>
+                  <div class="font-medium">1.5×</div>
+                  <div class="text-muted text-xs">ตามกฎหมายแรงงาน</div>
+                </div>
+                <div class="field-span-full">
+                  <div class="text-muted text-xs">เหตุผล / งานที่ทำ</div>
+                  <div class="font-medium">ปิดงบโครงการ Q1 และจัดทำรายงานสรุปให้ผู้บริหาร</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Attendance reference -->
+          <div class="card card-pad" style="background:color-mix(in srgb,var(--muted) 30%,var(--card))">
+            <div class="text-xs text-muted font-semibold mb-2">บันทึกเวลาอ้างอิง — 15/04/2568</div>
+            <div class="flex-row" style="gap:24px">
+              <div>
+                <div class="text-muted text-xs">เวลาเข้า</div>
+                <div class="text-mono font-medium">08:58</div>
+              </div>
+              <div>
+                <div class="text-muted text-xs">เวลาออก</div>
+                <div class="text-mono font-medium">20:05</div>
+              </div>
+              <div>
+                <div class="text-muted text-xs">ชม. ทำงานรวม</div>
+                <div class="font-medium">11.1 ชม.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Approval actions -->
+          <div class="card">
+            <div class="card-head">การดำเนินการ (ผู้อนุมัติ)</div>
+            <div class="card-body stack-y-4">
+
+              <!-- Reject reason (shown conditionally — preview shows it) -->
+              <div id="reject-reason-section" style="display:none">
+                <div class="field">
+                  <span class="label">เหตุผลที่ปฏิเสธ <span style="color:var(--destructive)">*</span></span>
+                  <textarea class="input" rows="3" placeholder="ระบุเหตุผลที่ปฏิเสธคำขอ OT นี้…"></textarea>
+                </div>
+              </div>
+
+              <div class="flex-row">
+                <button type="button" class="btn btn-primary btn-sm" id="btn-approve">✓ อนุมัติ</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btn-reject">✕ ปฏิเสธ</button>
+              </div>
+              <div class="hint">คำขอจะถูกบันทึกและแจ้งเตือนพนักงานทันที</div>
+            </div>
+          </div>
+
+          <!-- History (for non-pending state preview) -->
+          <div class="card">
+            <div class="card-head">ประวัติการดำเนินการ</div>
+            <div class="divide-y">
+              <div class="p-4 flex-row items-start" style="gap:12px">
+                <div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0">S</div>
+                <div>
+                  <div class="font-medium" style="font-size:13px">สมชาย ใจดี ยื่นคำขอ</div>
+                  <div class="text-muted text-xs">15/04/2568 เวลา 17:02</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+        }
+        var btnReject = document.getElementById("btn-reject");
+        var rejectSection = document.getElementById("reject-reason-section");
+        if (btnReject && rejectSection) {
+          btnReject.addEventListener("click", function () {
+            rejectSection.style.display = rejectSection.style.display === "none" ? "block" : "none";
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

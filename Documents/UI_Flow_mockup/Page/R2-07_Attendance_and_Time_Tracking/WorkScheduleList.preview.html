@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ตารางเวลา — Work Schedules — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — WorkScheduleListPage · route: <code>/hr/work-schedules</code></span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link" href="#">พนักงาน</a>
+          <a class="nav-link" href="#">ลาหยุด</a>
+          <div class="nav-group-label">เวลา</div>
+          <a class="nav-link" href="#">ลงเวลา</a>
+          <a class="nav-link" href="#">ล่วงเวลา (OT)</a>
+          <a class="nav-link active" href="#">ตารางเวลา</a>
+          <a class="nav-link" href="#">วันหยุด</a>
+          <div class="nav-group-label">เงินเดือน</div>
+          <a class="nav-link" href="#">รันเงินเดือน</a>
+        </nav>
+      </aside>
+
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">ตารางเวลาทำงาน</span>
+          <div class="header-actions">
+            <div class="avatar">HR</div>
+          </div>
+        </header>
+
+        <main class="main-content stack-y-6">
+
+          <!-- Page header -->
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">ตารางเวลาทำงาน</h1>
+              <p class="text-muted" style="margin:4px 0 0;font-size:13px">กำหนดกะและมอบหมายพนักงาน</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm">+ เพิ่มตารางเวลา</button>
+          </div>
+
+          <!-- Summary stats -->
+          <div class="grid-3">
+            <div class="card card-pad">
+              <div class="kpi-icon kpi-icon--primary">📋</div>
+              <div class="stat-val stat-val--primary">3</div>
+              <div class="stat-lbl">กะทำงานทั้งหมด</div>
+            </div>
+            <div class="card card-pad">
+              <div class="kpi-icon kpi-icon--success">👤</div>
+              <div class="stat-val stat-val--success">18</div>
+              <div class="stat-lbl">พนักงานมีกะแล้ว</div>
+            </div>
+            <div class="card card-pad">
+              <div class="kpi-icon kpi-icon--warning">⚠</div>
+              <div class="stat-val stat-val--warn">2</div>
+              <div class="stat-lbl">พนักงานยังไม่มีกะ</div>
+            </div>
+          </div>
+
+          <!-- Filter toolbar -->
+          <div class="flex-row filter-toolbar">
+            <input type="text" class="input input-max-w-sm" placeholder="ค้นหาชื่อกะ…" />
+            <select class="input select-auto">
+              <option>ทุกสถานะ</option>
+              <option>ใช้งานอยู่</option>
+              <option>ปิดใช้งาน</option>
+            </select>
+          </div>
+
+          <!-- Schedule table -->
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>ชื่อกะ</th>
+                  <th>วันทำงาน</th>
+                  <th>เวลาทำงาน</th>
+                  <th>พักกลางวัน</th>
+                  <th class="text-right">พนักงาน</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="font-medium">กะสำนักงาน</div>
+                    <div class="text-muted text-xs">ทั่วไป · สำนักงาน</div>
+                  </td>
+                  <td>
+                    <div class="flex-row" style="gap:4px;flex-wrap:nowrap">
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">จ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">อ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">พ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">พฤ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">ศ</span>
+                      <span class="badge badge-outline" style="font-size:10px;padding:1px 6px">ส</span>
+                      <span class="badge badge-outline" style="font-size:10px;padding:1px 6px">อา</span>
+                    </div>
+                  </td>
+                  <td class="text-mono">08:30 – 17:30</td>
+                  <td class="text-mono">12:00 – 13:00</td>
+                  <td class="text-right">
+                    <div class="font-medium">12</div>
+                    <div class="text-muted text-xs">คน</div>
+                  </td>
+                  <td><span class="badge badge-success">ใช้งาน</span></td>
+                  <td>
+                    <div class="flex-row" style="gap:8px">
+                      <a href="#" class="link link--md">แก้ไข</a>
+                      <a href="#" class="link link--md text-primary">มอบหมาย</a>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="font-medium">กะโรงงาน (เช้า)</div>
+                    <div class="text-muted text-xs">โรงงาน · เช้า</div>
+                  </td>
+                  <td>
+                    <div class="flex-row" style="gap:4px;flex-wrap:nowrap">
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">จ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">อ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">พ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">พฤ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">ศ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">ส</span>
+                      <span class="badge badge-outline" style="font-size:10px;padding:1px 6px">อา</span>
+                    </div>
+                  </td>
+                  <td class="text-mono">06:00 – 14:00</td>
+                  <td class="text-mono">10:00 – 10:30</td>
+                  <td class="text-right">
+                    <div class="font-medium">4</div>
+                    <div class="text-muted text-xs">คน</div>
+                  </td>
+                  <td><span class="badge badge-success">ใช้งาน</span></td>
+                  <td>
+                    <div class="flex-row" style="gap:8px">
+                      <a href="#" class="link link--md">แก้ไข</a>
+                      <a href="#" class="link link--md text-primary">มอบหมาย</a>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="font-medium">กะโรงงาน (บ่าย)</div>
+                    <div class="text-muted text-xs">โรงงาน · บ่าย</div>
+                  </td>
+                  <td>
+                    <div class="flex-row" style="gap:4px;flex-wrap:nowrap">
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">จ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">อ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">พ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">พฤ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">ศ</span>
+                      <span class="badge badge-success" style="font-size:10px;padding:1px 6px">ส</span>
+                      <span class="badge badge-outline" style="font-size:10px;padding:1px 6px">อา</span>
+                    </div>
+                  </td>
+                  <td class="text-mono">14:00 – 22:00</td>
+                  <td class="text-mono">18:00 – 18:30</td>
+                  <td class="text-right">
+                    <div class="font-medium">2</div>
+                    <div class="text-muted text-xs">คน</div>
+                  </td>
+                  <td><span class="badge badge-success">ใช้งาน</span></td>
+                  <td>
+                    <div class="flex-row" style="gap:8px">
+                      <a href="#" class="link link--md">แก้ไข</a>
+                      <a href="#" class="link link--md text-primary">มอบหมาย</a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Unassigned alert -->
+          <div class="alert-warn" style="display:flex;align-items:center;gap:8px">
+            <span>⚠</span>
+            <span>มีพนักงาน <strong>2 คน</strong> ที่ยังไม่ได้รับมอบหมายกะ — <a href="#" class="link link--md" style="color:var(--warning-fg);text-decoration:underline">จัดการ</a></span>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

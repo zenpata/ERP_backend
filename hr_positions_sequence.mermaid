@@ -1,0 +1,115 @@
+sequenceDiagram
+    title HR Positions API — Full CRUD Flow
+
+    actor FE as Frontend hr_admin
+    participant GW as API Router
+    participant Auth as Auth Middleware
+    participant PS as PositionService
+    participant DB as PostgreSQL
+
+    %% ─── 1. GET LIST ────────────────────────────────────────────
+    Note over FE,DB: 1. GET /api/hr/positions — List with filters and pagination
+
+    FE->>GW: GET /api/hr/positions?departmentId=&search=&page=1&perPage=20
+    GW->>Auth: validateToken(JWT)
+    Auth-->>GW: user + permissions
+    GW->>Auth: requirePermission(hr:department:view)
+    Auth-->>GW: authorized
+    GW->>PS: listPositions(departmentId, search, page, perPage)
+    PS->>DB: SELECT pos.*, dept.name AS departmentName FROM positions pos LEFT JOIN departments dept ON pos.department_id = dept.id WHERE filters ORDER BY pos.level ASC, pos.name ASC LIMIT perPage OFFSET offset
+    DB-->>PS: rows[]
+    PS->>DB: SELECT COUNT(*) FROM positions WHERE filters
+    DB-->>PS: total
+    PS-->>GW: data[], meta(page, perPage, total, totalPages)
+    GW-->>FE: 200 OK — success:true, data[], meta
+
+    %% ─── 2. GET BY ID ───────────────────────────────────────────
+    Note over FE,DB: 2. GET /api/hr/positions/:id — Detail
+
+    FE->>GW: GET /api/hr/positions/:id
+    GW->>Auth: validateToken + requirePermission(hr:department:view)
+    Auth-->>GW: authorized
+    GW->>PS: getPositionById(id)
+    PS->>DB: SELECT pos.*, dept.name AS departmentName, COUNT(emp.id) AS employeeCount FROM positions pos LEFT JOIN departments dept ON pos.department_id = dept.id LEFT JOIN employees emp ON emp.position_id = pos.id AND emp.status = active WHERE pos.id = :id
+    DB-->>PS: row or null
+    alt Not Found
+        PS-->>GW: NotFoundError
+        GW-->>FE: 404 — POSITION_NOT_FOUND
+    else Found
+        PS-->>GW: PositionDetail
+        GW-->>FE: 200 OK — id, code, name, departmentId, departmentName, level, employeeCount, createdAt, updatedAt
+    end
+
+    %% ─── 3. POST CREATE ─────────────────────────────────────────
+    Note over FE,DB: 3. POST /api/hr/positions — Create
+
+    FE->>GW: POST /api/hr/positions — body: name, departmentId?, level?
+    GW->>Auth: validateToken + requirePermission(hr:department:edit)
+    Auth-->>GW: authorized
+    GW->>PS: createPosition(name, departmentId, level)
+
+    opt departmentId provided
+        PS->>DB: SELECT id FROM departments WHERE id = departmentId
+        DB-->>PS: department row
+        alt department not found
+            PS-->>GW: ValidationError
+            GW-->>FE: 422 — INVALID_DEPARTMENT_ID
+        end
+    end
+
+    PS->>PS: generateCode → POS-001
+    PS->>DB: INSERT INTO positions(id, code, name, department_id, level, created_at, updated_at)
+    DB-->>PS: newPosition
+    GW-->>FE: 201 Created — Position object
+
+    %% ─── 4. PATCH UPDATE ────────────────────────────────────────
+    Note over FE,DB: 4. PATCH /api/hr/positions/:id — Partial Update
+
+    FE->>GW: PATCH /api/hr/positions/:id — partial body name?, departmentId?, level?
+    GW->>Auth: validateToken + requirePermission(hr:department:edit)
+    Auth-->>GW: authorized
+    GW->>PS: updatePosition(id, payload)
+    PS->>DB: SELECT * FROM positions WHERE id
+    DB-->>PS: existing row
+    alt Not Found
+        PS-->>GW: NotFoundError
+        GW-->>FE: 404 — POSITION_NOT_FOUND
+    end
+
+    opt departmentId changed
+        PS->>DB: SELECT id FROM departments WHERE id = newDepartmentId
+        DB-->>PS: department row
+        alt department not found
+            PS-->>GW: ValidationError
+            GW-->>FE: 422 — INVALID_DEPARTMENT_ID
+        end
+    end
+
+    PS->>DB: UPDATE positions SET name, department_id, level, updated_at WHERE id
+    DB-->>PS: updatedPosition
+    GW-->>FE: 200 OK — Updated Position object
+
+    %% ─── 5. DELETE ──────────────────────────────────────────────
+    Note over FE,DB: 5. DELETE /api/hr/positions/:id — Delete with employee check
+
+    FE->>GW: DELETE /api/hr/positions/:id
+    GW->>Auth: validateToken + requirePermission(hr:department:edit)
+    Auth-->>GW: authorized
+    GW->>PS: deletePosition(id)
+    PS->>DB: SELECT * FROM positions WHERE id
+    DB-->>PS: row
+    alt Not Found
+        PS-->>GW: NotFoundError
+        GW-->>FE: 404 — POSITION_NOT_FOUND
+    end
+
+    PS->>DB: COUNT employees WHERE position_id = id AND status = active
+    DB-->>PS: employeeCount
+    alt employeeCount > 0
+        PS-->>GW: BusinessRuleError
+        GW-->>FE: 409 — POSITION_HAS_EMPLOYEES
+    end
+
+    PS->>DB: DELETE FROM positions WHERE id
+    DB-->>PS: ok
+    GW-->>FE: 200 OK — Position deleted successfully

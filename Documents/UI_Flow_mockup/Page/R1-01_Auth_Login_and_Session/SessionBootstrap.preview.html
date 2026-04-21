@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Session bootstrap — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span
+        ><strong>Static preview</strong> — หลัง login: โหลด <code>/me</code> + shell (mock)</span
+      >
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">กำลังโหลดเมนู…</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">…</div>
+          <span class="nav-link" style="opacity: 0.5; pointer-events: none">—</span>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">กำลังเตรียมเซสชัน</span>
+          <div class="header-actions">
+            <div class="avatar" style="opacity: 0.4">…</div>
+          </div>
+        </header>
+        <main class="main-content main-content--relative" id="mainArea">
+          <div class="control-panel" style="margin-bottom: 16px; max-width: 420px">
+            <h2>Preview controls</h2>
+            <label class="control-row">
+              <input type="radio" name="bootState" id="stateLoading" value="loading" checked />
+              <span>Loading (skeleton + overlay)</span>
+            </label>
+            <label class="control-row">
+              <input type="radio" name="bootState" id="stateError" value="error" />
+              <span>Error โหลด /me + Retry</span>
+            </label>
+            <label class="control-row">
+              <input type="radio" name="bootState" id="stateOk" value="ok" />
+              <span>สำเร็จ (placeholder เนื้อหา)</span>
+            </label>
+          </div>
+
+          <div id="panelLoading" style="position: relative; min-height: 240px">
+            <div class="skeleton-stack" style="max-width: 640px">
+              <div class="skeleton-line skeleton-line--lg" style="width: 40%"></div>
+              <div class="skeleton-line" style="width: 72%"></div>
+              <div class="skeleton-line skeleton-line--xl" style="width: 100%"></div>
+              <div class="skeleton-line" style="width: 88%"></div>
+              <div class="skeleton-line" style="width: 56%"></div>
+            </div>
+            <div id="loadingOverlay" class="overlay-busy">
+              <div class="spinner" aria-hidden="true"></div>
+              <p class="overlay-busy__text">กำลังโหลดข้อมูลผู้ใช้…</p>
+            </div>
+          </div>
+
+          <div id="panelError" hidden>
+            <div class="card card-body" style="max-width: 480px">
+              <div class="alert-error mb-3">
+                ไม่สามารถโหลดข้อมูลผู้ใช้ได้ (จำลอง) — ลองใหม่อีกครั้งก่อนกลับไป login
+              </div>
+              <button type="button" class="btn btn-primary btn-sm">ลองใหม่</button>
+            </div>
+          </div>
+
+          <div id="panelOk" hidden>
+            <p class="text-muted m-0">
+              Shell พร้อมแล้ว (mock) — ในแอปจริงจะ redirect ไป landing ตามสิทธิ์
+            </p>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var dark = document.getElementById("previewDarkMode");
+        var main = document.getElementById("mainArea");
+        var loading = document.getElementById("panelLoading");
+        var err = document.getElementById("panelError");
+        var ok = document.getElementById("panelOk");
+        var overlay = document.getElementById("loadingOverlay");
+        function sync() {
+          document.documentElement.classList.toggle("dark", dark.checked);
+          var v = document.querySelector('input[name="bootState"]:checked');
+          var state = v ? v.value : "loading";
+          loading.hidden = state !== "loading";
+          err.hidden = state !== "error";
+          ok.hidden = state !== "ok";
+          if (overlay) overlay.hidden = state !== "loading";
+        }
+        dark.addEventListener("change", sync);
+        document.querySelectorAll('input[name="bootState"]').forEach(function (r) {
+          r.addEventListener("change", sync);
+        });
+        sync();
+      })();
+    </script>
+  </body>
+</html>

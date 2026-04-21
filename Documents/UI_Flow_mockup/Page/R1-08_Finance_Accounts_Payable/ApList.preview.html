@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance — เจ้าหนี้ (AP) — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      /* Collapsible create panel */
+      .create-panel { display: none; }
+      .create-panel.open { display: block; }
+
+      /* Vendor modal */
+      .vendor-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; place-items: center; }
+      .vendor-modal-backdrop.open { display: grid; }
+
+      /* Clickable table rows */
+      .data tbody tr.clickable { cursor: pointer; }
+      .data tbody tr.clickable:hover { background: var(--muted); }
+
+      /* Status badge colours */
+      .badge-draft    { background: var(--muted);            color: var(--muted-foreground); border: 1px solid var(--border); }
+      .badge-submitted{ background: #dbeafe;                 color: #1e40af; border: 1px solid #93c5fd; }
+      .badge-approved { background: var(--success-bg);       color: var(--success-fg); border: 1px solid #86efac; }
+      .badge-rejected { background: #fee2e2;                 color: #991b1b; border: 1px solid #fca5a5; }
+      .badge-partial  { background: #fef3c7;                 color: #92400e; border: 1px solid #fcd34d; }
+      .badge-paid     { background: #f0fdf4;                 color: #166534; border: 1px solid #4ade80; font-weight:600; }
+
+      .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; gap: 4px; }
+
+      /* Items table inside form */
+      .items-table th, .items-table td { padding: 6px 8px; }
+      .items-table input { width: 100%; }
+
+      /* Vendor dropdown list */
+      .vendor-dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 10; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,.1); margin-top: 2px; }
+      .vendor-dropdown-item { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+      .vendor-dropdown-item:hover { background: var(--muted); }
+      .vendor-dropdown-divider { border-top: 1px solid var(--border); }
+      .vendor-dropdown-create { padding: 8px 12px; cursor: pointer; font-size: 13px; color: var(--primary); font-weight: 500; }
+      .vendor-dropdown-create:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); }
+      .vendor-field-wrap { position: relative; }
+
+      /* Summary row */
+      .summary-row { display: flex; justify-content: flex-end; gap: 24px; padding: 8px 12px; font-size: 13px; }
+      .summary-row .total-label { color: var(--muted-foreground); }
+      .summary-row .total-val { font-weight: 600; min-width: 80px; text-align: right; }
+
+      /* Filter toolbar */
+      .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .filter-bar .input { max-width: 220px; }
+    </style>
+  </head>
+  <body>
+    <!-- ── Preview controls ───────────────────────────────────────────── -->
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — ApListPage (ปรับปรุง UX)</span>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <label class="preview-toggle"><input type="checkbox" id="toggleCreate" /> แสดงฟอร์มสร้างบิล</label>
+        <label class="preview-toggle"><input type="checkbox" id="toggleVendorDrop" /> Vendor dropdown</label>
+        <label class="preview-toggle"><input type="checkbox" id="toggleVendorModal" /> Modal vendor ใหม่</label>
+        <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+      </div>
+    </div>
+
+    <!-- ── App shell ──────────────────────────────────────────────────── -->
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link active" href="#">เจ้าหนี้</a>
+        </nav>
+      </aside>
+
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">เจ้าหนี้ (AP)</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+
+        <main class="main-content stack-y-6">
+
+          <!-- ── PageHeader ──────────────────────────────────────────── -->
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">Accounts Payable</h1>
+              <p style="margin:4px 0 0;font-size:13px;color:var(--muted-foreground)">จัดการใบแจ้งหนี้เจ้าหนี้และบันทึกการจ่ายเงิน</p>
+            </div>
+            <div class="actions">
+              <!--
+                ✅ ปรับปรุง: ปุ่ม "สร้างบิล" เป็น toggle เปิด/ปิดฟอร์ม
+                (แทนที่ฟอร์มที่แสดงค้างไว้ตลอดเวลา)
+              -->
+              <button type="button" class="btn btn-primary btn-sm" id="btnToggleCreate">+ สร้างบิล</button>
+            </div>
+          </div>
+
+          <!-- ── Create form (collapsed by default) ─────────────────── -->
+          <!--
+            ✅ ปรับปรุง: ฟอร์ม collapse by default
+            - ผู้ใช้ที่มาดูรายการไม่ต้อง scroll ข้ามฟอร์มทุกครั้ง
+            - เปิดเฉพาะเมื่อกด "+ สร้างบิล"
+          -->
+          <div class="card card-pad stack-y-4 create-panel" id="createPanel">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <h3 style="margin:0;font-size:15px;font-weight:600">สร้าง AP Bill ใหม่</h3>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnCloseCreate">✕ ปิด</button>
+            </div>
+
+            <div class="grid-2">
+              <!-- Vendor field with dropdown + inline create -->
+              <!--
+                ✅ ปรับปรุง: เพิ่ม "+ สร้าง vendor ใหม่" ใน dropdown
+                (Sub-flow 7 — inline vendor creation)
+              -->
+              <div class="field field-span-full">
+                <span class="label">ผู้ขาย <span style="color:var(--destructive)">*</span></span>
+                <div class="vendor-field-wrap">
+                  <input class="input" id="vendorSearch" placeholder="พิมพ์เพื่อค้นหาผู้ขาย..." autocomplete="off" />
+                  <div class="vendor-dropdown" id="vendorDropdown" style="display:none">
+                    <div class="vendor-dropdown-item">V001 — Supplier A (บจก. เอ)</div>
+                    <div class="vendor-dropdown-item">V002 — Supplier B (หจก. บี)</div>
+                    <div class="vendor-dropdown-item">V003 — Supplier C</div>
+                    <div class="vendor-dropdown-divider"></div>
+                    <div class="vendor-dropdown-create" id="btnOpenVendorModal">＋ สร้างผู้ขายใหม่...</div>
+                  </div>
+                </div>
+                <div class="hint">เลือกจากรายการ หรือสร้างผู้ขายใหม่</div>
+              </div>
+
+              <!--
+                ✅ ปรับปรุง: เหลือเฉพาะ field ที่อยู่ใน BR/spec
+                (ตัด "หมวดค่าใช้จ่าย" และ "วันรับของ" ออก — ไม่อยู่ใน AP create spec)
+              -->
+              <div class="field">
+                <span class="label">เลขที่ใบกำกับผู้ขาย</span>
+                <input class="input" placeholder="เช่น INV-2025-001" />
+              </div>
+              <div class="field">
+                <span class="label">วันที่ออกใบแจ้งหนี้ <span style="color:var(--destructive)">*</span></span>
+                <input class="input" type="date" />
+              </div>
+              <div class="field">
+                <span class="label">วันครบกำหนด <span style="color:var(--destructive)">*</span></span>
+                <input class="input" type="date" />
+              </div>
+              <div class="field field-span-full">
+                <span class="label">หมายเหตุ</span>
+                <input class="input" placeholder="ถ้ามี" />
+              </div>
+            </div>
+
+            <!-- Line items table -->
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:13px;font-weight:600">รายการบรรทัด</span>
+                <button type="button" class="btn btn-sm">+ เพิ่มแถว</button>
+              </div>
+              <div class="table-wrap">
+                <table class="data items-table">
+                  <thead>
+                    <tr>
+                      <th>รายละเอียด <span style="color:var(--destructive)">*</span></th>
+                      <th class="text-right" style="width:100px">จำนวน <span style="color:var(--destructive)">*</span></th>
+                      <th class="text-right" style="width:120px">ราคา/หน่วย <span style="color:var(--destructive)">*</span></th>
+                      <th class="text-right" style="width:110px">ยอด</th>
+                      <th style="width:40px"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input class="input" value="บริการ IT รายเดือน" /></td>
+                      <td class="text-right"><input class="input" type="number" value="1" style="text-align:right" /></td>
+                      <td class="text-right"><input class="input" type="number" value="9000" style="text-align:right" /></td>
+                      <td class="text-right" style="font-size:13px">฿9,000.00</td>
+                      <td><button type="button" class="btn btn-ghost btn-sm" style="color:var(--destructive)">✕</button></td>
+                    </tr>
+                    <tr>
+                      <td><input class="input" value="ค่าซอฟต์แวร์ใบอนุญาต" /></td>
+                      <td class="text-right"><input class="input" type="number" value="3" style="text-align:right" /></td>
+                      <td class="text-right"><input class="input" type="number" value="500" style="text-align:right" /></td>
+                      <td class="text-right" style="font-size:13px">฿1,500.00</td>
+                      <td><button type="button" class="btn btn-ghost btn-sm" style="color:var(--destructive)">✕</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--
+                ✅ ปรับปรุง: สรุปยอดรวม read-only ด้านล่างตาราง
+                (ตัด VAT/WHT input ออก — WHT เป็น R2; VAT ไม่อยู่ใน AP create spec)
+              -->
+              <div class="summary-row">
+                <span class="total-label">ยอดรวม</span>
+                <span class="total-val">฿10,500.00</span>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--border)">
+              <button type="button" class="btn btn-primary btn-sm">บันทึกบิล</button>
+              <button type="button" class="btn btn-sm" id="btnCloseCreate2">ยกเลิก</button>
+            </div>
+          </div>
+
+          <!-- ── Filter toolbar ──────────────────────────────────────── -->
+          <div class="card card-pad">
+            <div class="filter-bar">
+              <input class="input" placeholder="ค้นหาเลขที่บิล, ผู้ขาย..." style="max-width:240px" />
+              <select class="text-input" style="min-width:130px">
+                <option value="">ทุกสถานะ</option>
+                <option>draft</option>
+                <option>submitted</option>
+                <option>approved</option>
+                <option>rejected</option>
+                <option>partially_paid</option>
+                <option>paid</option>
+              </select>
+              <select class="text-input" style="min-width:150px">
+                <option value="">ทุกผู้ขาย</option>
+                <option>Supplier A</option>
+                <option>Supplier B</option>
+              </select>
+              <input class="input" type="date" style="max-width:150px" title="วันที่ออก (เริ่มต้น)" />
+              <input class="input" type="date" style="max-width:150px" title="วันที่ออก (สิ้นสุด)" />
+              <button type="button" class="btn btn-sm">กรอง</button>
+            </div>
+          </div>
+
+          <!-- ── AP bills table ──────────────────────────────────────── -->
+          <!--
+            ✅ ปรับปรุง: ตารางรายการ — ไม่มี inline actions (อนุมัติ/จ่าย)
+            ทุก action ทำที่หน้า detail เท่านั้น
+            แถวคลิกได้เพื่อไปหน้ารายละเอียด
+          -->
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>เลขที่เอกสาร</th>
+                  <th>ผู้ขาย</th>
+                  <th>เลขที่ใบกำกับ</th>
+                  <th>วันออก</th>
+                  <th>ครบกำหนด</th>
+                  <th class="text-right">ยอดรวม</th>
+                  <th class="text-right">จ่ายแล้ว</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="clickable">
+                  <td class="text-mono">AP-2025-0001</td>
+                  <td>Supplier A</td>
+                  <td class="text-mono">INV-V-1042</td>
+                  <td>01/04/2568</td>
+                  <td>30/04/2568</td>
+                  <td class="text-right">฿10,500.00</td>
+                  <td class="text-right text-muted">฿3,000.00</td>
+                  <td><span class="badge badge-partial">partially_paid</span></td>
+                  <td><a href="#" class="link link--sm">ดูรายละเอียด →</a></td>
+                </tr>
+                <tr class="clickable">
+                  <td class="text-mono">AP-2025-0002</td>
+                  <td>Supplier B</td>
+                  <td class="text-mono">INV-B-0055</td>
+                  <td>05/04/2568</td>
+                  <td>05/05/2568</td>
+                  <td class="text-right">฿25,000.00</td>
+                  <td class="text-right text-muted">—</td>
+                  <td><span class="badge badge-submitted">submitted</span></td>
+                  <td><a href="#" class="link link--sm">ดูรายละเอียด →</a></td>
+                </tr>
+                <tr class="clickable">
+                  <td class="text-mono">AP-2025-0003</td>
+                  <td>Supplier C</td>
+                  <td class="text-mono">SC-2025-088</td>
+                  <td>10/04/2568</td>
+                  <td>10/05/2568</td>
+                  <td class="text-right">฿5,000.00</td>
+                  <td class="text-right text-muted">—</td>
+                  <td><span class="badge badge-draft">draft</span></td>
+                  <td><a href="#" class="link link--sm">ดูรายละเอียด →</a></td>
+                </tr>
+                <tr class="clickable">
+                  <td class="text-mono">AP-2025-0004</td>
+                  <td>Supplier A</td>
+                  <td class="text-mono">INV-V-0990</td>
+                  <td>15/03/2568</td>
+                  <td>14/04/2568</td>
+                  <td class="text-right">฿8,000.00</td>
+                  <td class="text-right text-muted">฿8,000.00</td>
+                  <td><span class="badge badge-paid">paid</span></td>
+                  <td><a href="#" class="link link--sm">ดูรายละเอียด →</a></td>
+                </tr>
+                <tr class="clickable">
+                  <td class="text-mono">AP-2025-0005</td>
+                  <td>Supplier B</td>
+                  <td class="text-mono">INV-B-0031</td>
+                  <td>20/03/2568</td>
+                  <td>19/04/2568</td>
+                  <td class="text-right">฿12,000.00</td>
+                  <td class="text-right text-muted">—</td>
+                  <td><span class="badge badge-rejected">rejected</span></td>
+                  <td><a href="#" class="link link--sm">ดูรายละเอียด →</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted-foreground)">
+            <span>แสดง 1–5 จาก 23 รายการ</span>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-sm" disabled>‹ ก่อนหน้า</button>
+              <button class="btn btn-sm btn-primary">1</button>
+              <button class="btn btn-sm">2</button>
+              <button class="btn btn-sm">3</button>
+              <button class="btn btn-sm">ถัดไป ›</button>
+            </div>
+            <select class="text-input" style="font-size:12px;padding:4px 8px">
+              <option>20 / หน้า</option>
+              <option>50 / หน้า</option>
+            </select>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- ── Inline Vendor Modal (Sub-flow 7) ──────────────────────────── -->
+    <!--
+      ✅ เพิ่ม: Modal สร้าง vendor ใหม่จากหน้า AP โดยไม่ต้องออกจากหน้า
+      หลัง 201 → auto-select vendor ที่สร้างในฟอร์มสร้างบิล
+    -->
+    <div id="vendorModalBackdrop" class="vendor-modal-backdrop" role="presentation">
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="vendorModalTitle" style="max-width:480px;width:100%">
+        <div class="modal-dialog__head">
+          <h2 id="vendorModalTitle" style="margin:0;font-size:16px">สร้างผู้ขายใหม่</h2>
+        </div>
+        <div class="modal-dialog__body stack-y-4">
+          <div class="grid-2">
+            <div class="field field-span-full">
+              <span class="label">ชื่อผู้ขาย <span style="color:var(--destructive)">*</span></span>
+              <input class="input" placeholder="ชื่อบริษัท / บุคคล" />
+            </div>
+            <div class="field">
+              <span class="label">เลขประจำตัวผู้เสียภาษี</span>
+              <input class="input" placeholder="13 หลัก" />
+            </div>
+            <div class="field">
+              <span class="label">รหัสผู้ขาย (vendor code)</span>
+              <input class="input" placeholder="เช่น V004" />
+            </div>
+            <div class="field field-span-full">
+              <span class="label">ที่อยู่</span>
+              <input class="input" placeholder="ถ้ามี" />
+            </div>
+            <div class="field">
+              <span class="label">เบอร์โทร</span>
+              <input class="input" />
+            </div>
+            <div class="field">
+              <span class="label">อีเมล</span>
+              <input class="input" type="email" />
+            </div>
+          </div>
+          <div class="hint">หลังบันทึกสำเร็จ ผู้ขายใหม่จะถูกเลือกในฟอร์มสร้างบิลทันที</div>
+        </div>
+        <div class="modal-dialog__foot" style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn btn-sm" id="btnCloseVendorModal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary btn-sm">บันทึกผู้ขาย</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        /* Dark mode */
+        var dark = document.getElementById("previewDarkMode");
+        function syncDark() { document.documentElement.classList.toggle("dark", dark.checked); }
+        dark.addEventListener("change", syncDark); syncDark();
+
+        /* Collapsible create form */
+        var panel = document.getElementById("createPanel");
+        var toggleCheck = document.getElementById("toggleCreate");
+        function syncPanel() { panel.classList.toggle("open", toggleCheck.checked); }
+        toggleCheck.addEventListener("change", syncPanel); syncPanel();
+        document.getElementById("btnToggleCreate").addEventListener("click", function () {
+          toggleCheck.checked = !toggleCheck.checked; syncPanel();
+        });
+        document.getElementById("btnCloseCreate").addEventListener("click", function () { toggleCheck.checked = false; syncPanel(); });
+        document.getElementById("btnCloseCreate2").addEventListener("click", function () { toggleCheck.checked = false; syncPanel(); });
+
+        /* Vendor dropdown */
+        var vendorDropdown = document.getElementById("vendorDropdown");
+        var vendorSearchInput = document.getElementById("vendorSearch");
+        var toggleVendorDrop = document.getElementById("toggleVendorDrop");
+        function syncVendorDrop() { vendorDropdown.style.display = toggleVendorDrop.checked ? "block" : "none"; }
+        toggleVendorDrop.addEventListener("change", syncVendorDrop); syncVendorDrop();
+        vendorSearchInput.addEventListener("focus", function () { toggleVendorDrop.checked = true; syncVendorDrop(); });
+        vendorSearchInput.addEventListener("blur", function () { setTimeout(function () { toggleVendorDrop.checked = false; syncVendorDrop(); }, 150); });
+
+        /* Vendor modal */
+        var vendorModalBackdrop = document.getElementById("vendorModalBackdrop");
+        var toggleVendorModal = document.getElementById("toggleVendorModal");
+        function syncVendorModal() { vendorModalBackdrop.classList.toggle("open", toggleVendorModal.checked); }
+        toggleVendorModal.addEventListener("change", syncVendorModal); syncVendorModal();
+        document.getElementById("btnOpenVendorModal").addEventListener("click", function () { toggleVendorModal.checked = true; syncVendorModal(); });
+        document.getElementById("btnCloseVendorModal").addEventListener("click", function () { toggleVendorModal.checked = false; syncVendorModal(); });
+      })();
+    </script>
+  </body>
+</html>

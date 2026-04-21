@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR — บันทึกรับชำระ — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — ARPaymentRecordingPage</span>
+      <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">ลูกหนี้ (AR)</div>
+          <a class="nav-link active" href="#">รับชำระ</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">บันทึกการรับเงิน</span>
+          <div class="header-actions"><div class="avatar">A</div></div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">รับชำระใบแจ้งหนี้</h1>
+          </div>
+          <div class="card card-pad stack-y-4">
+            <div class="field field-span-full">
+              <span class="label">เลือกใบแจ้งหนี้</span>
+              <input class="input" placeholder="ค้นหา INV-..." value="INV-2025-001" />
+            </div>
+            <div class="grid-2">
+              <div class="field"><span class="label">ยอดคงเหลือ</span><input class="input" readonly value="฿107,000" /></div>
+              <div class="field"><span class="label">จำนวนรับ</span><input class="input" type="number" value="50000" /></div>
+              <div class="field"><span class="label">วันที่รับ</span><input class="input" type="date" /></div>
+              <div class="field"><span class="label">ช่องทาง</span><select class="text-input"><option>โอน</option><option>เงินสด</option></select></div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm">บันทึกรับชำระ</button>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var d = document.getElementById("previewDarkMode");
+        if (d) {
+          d.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", d.checked);
+          });
+          document.documentElement.classList.toggle("dark", d.checked);
+        }
+      })();
+    </script>
+  </body>
+</html>

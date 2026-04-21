@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance — ผู้ขาย — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — VendorListPage</span>
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link active" href="#">ผู้ขาย</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">ผู้ขาย</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">ผู้ขาย / Vendors</h1>
+            <a class="btn btn-primary btn-sm" href="#">+ สร้าง</a>
+          </div>
+          <div class="card card-pad flex-row filter-toolbar">
+            <div class="field field-grow">
+              <span class="label text-muted">ค้นหา</span>
+              <input class="input" placeholder="ชื่อ / รหัส" />
+            </div>
+            <div class="field field--bare">
+              <span class="label text-muted">สถานะ</span>
+              <select class="text-input"><option>ทั้งหมด</option></select>
+            </div>
+            <div class="field field--bare">
+              <span class="label text-muted">ต่อหน้า</span>
+              <select class="text-input"><option>20</option></select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>รหัส</th>
+                  <th>ชื่อ</th>
+                  <th>เลขผู้เสียภาษี</th>
+                  <th>สถานะ</th>
+                  <th>การทำงาน</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-mono">V001</td>
+                  <td>Supplier A</td>
+                  <td>010555...</td>
+                  <td><span class="badge badge-success">ใช้งาน</span></td>
+                  <td>
+                    <a href="#" class="link">แก้ไข</a>
+                    <a href="#" class="link-muted ml-2">ปิดใช้งาน</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex-row flex-between">
+            <span class="text-muted">หน้า 1 / 1</span>
+            <div class="flex-row">
+              <button type="button" class="btn btn-sm" disabled>Prev</button>
+              <button type="button" class="btn btn-sm" disabled>Next</button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById("previewDarkMode");
+        if (!el) return;
+        function s() {
+          document.documentElement.classList.toggle("dark", el.checked);
+        }
+        el.addEventListener("change", s);
+        s();
+      })();
+    </script>
+  </body>
+</html>

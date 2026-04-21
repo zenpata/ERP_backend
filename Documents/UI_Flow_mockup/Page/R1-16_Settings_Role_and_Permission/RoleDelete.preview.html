@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings — ลบ Role — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — ยืนยันลบ role (modal) · ไม่เชื่อม API</span>
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+
+    <div class="main-content" style="min-height: 40vh">
+      <p class="text-muted text-center">พื้นหลังจำลอง — หลังกดลบ role จากตาราง Roles</p>
+    </div>
+
+    <div class="modal-backdrop" role="presentation">
+      <div class="preview-stack" style="width: 100%; max-width: 440px; margin: 0 auto">
+        <div class="control-panel" style="margin-bottom: 12px">
+          <h2>Preview controls</h2>
+          <label class="control-row">
+            <input id="toggleSubmitting" type="checkbox" />
+            <span>กำลังลบ (ปุ่ม loading)</span>
+          </label>
+        </div>
+
+        <div class="modal-dialog" role="dialog" aria-labelledby="del-role-title">
+          <div class="modal-dialog__head">
+            <h1 id="del-role-title">ลบ role นี้?</h1>
+          </div>
+          <div class="modal-dialog__body">
+            <p class="m-0" style="font-size: 14px; color: var(--muted-foreground)">
+              Role <strong class="text-mono">project_viewer</strong> จะถูกลบออกจากระบบ
+              และสิทธิ์ที่เคยกำหนดไว้จะไม่ใช้กับ role นี้อีก
+            </p>
+            <p class="hint mt-3 mb-0">ผู้ใช้ที่ผูก role นี้อยู่: <strong>0</strong> คน (ตัวอย่าง)</p>
+            <div class="field mt-3">
+              <span class="label">พิมพ์ชื่อ role เพื่อยืนยัน *</span>
+              <input class="input text-mono" placeholder="project_viewer" />
+            </div>
+            <p class="hint text-xs mt-2 mb-0">
+              ตาม UX: ฟิลด์ <code class="text-mono">confirmRoleName</code> ต้องตรงกับชื่อ role ก่อน submit
+            </p>
+          </div>
+          <div class="modal-dialog__foot">
+            <button type="button" class="btn">ยกเลิก</button>
+            <button id="deleteBtn" type="button" class="btn btn-danger">ลบ role</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var dark = document.getElementById("previewDarkMode");
+        var submitting = document.getElementById("toggleSubmitting");
+        var deleteBtn = document.getElementById("deleteBtn");
+        function sync() {
+          document.documentElement.classList.toggle("dark", dark.checked);
+          if (submitting.checked) {
+            deleteBtn.disabled = true;
+            deleteBtn.textContent = "กำลังลบ…";
+          } else {
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = "ลบ role";
+          }
+        }
+        [dark, submitting].forEach(function (el) {
+          el.addEventListener("change", sync);
+        });
+        sync();
+      })();
+    </script>
+  </body>
+</html>

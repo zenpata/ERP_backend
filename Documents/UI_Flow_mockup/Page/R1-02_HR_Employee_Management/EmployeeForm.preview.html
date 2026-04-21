@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HR — ฟอร์มพนักงาน — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — EmployeeFormPage + EmployeeForm</span>
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link active" href="#">รายชื่อพนักงาน</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">เพิ่มพนักงาน</span>
+          <div class="header-actions">
+            <button type="button" class="icon-btn">🔔</button>
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content max-w-3xl stack-y-4">
+          <div class="breadcrumb"><a href="#">รายชื่อพนักงาน</a> / เพิ่มพนักงาน</div>
+          <div class="page-header">
+            <h1 class="m-0">เพิ่มพนักงาน</h1>
+          </div>
+
+          <div class="card">
+            <div class="card-head">ข้อมูลส่วนตัว</div>
+            <div class="card-body">
+              <div class="grid-2">
+                <div class="field">
+                  <span class="label">รหัสพนักงาน</span>
+                  <input class="input" disabled value="(อัตโนมัติหลังบันทึก)" />
+                  <span class="hint">สร้างอัตโนมัติจากระบบ</span>
+                </div>
+                <div class="field">
+                  <span class="label">เลขบัตร ปชช. *</span>
+                  <input class="input" />
+                </div>
+                <div class="field">
+                  <span class="label">ชื่อ (TH) *</span>
+                  <input class="input" />
+                </div>
+                <div class="field">
+                  <span class="label">นามสกุล (TH) *</span>
+                  <input class="input" />
+                </div>
+                <div class="field">
+                  <span class="label">วันเกิด *</span>
+                  <input class="input" type="date" />
+                </div>
+                <div class="field">
+                  <span class="label">เพศ *</span>
+                  <select class="text-input"><option>ชาย</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">การทำงาน</div>
+            <div class="card-body">
+              <div class="grid-2">
+                <div class="field">
+                  <span class="label">แผนก</span>
+                  <select class="text-input"><option>— เลือก —</option></select>
+                </div>
+                <div class="field">
+                  <span class="label">ตำแหน่ง</span>
+                  <select class="text-input"><option>— เลือก —</option></select>
+                </div>
+                <div class="field">
+                  <span class="label">วันเริ่มงาน *</span>
+                  <input class="input" type="date" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-row flex-end">
+            <button type="button" class="btn">ยกเลิก</button>
+            <button type="button" class="btn btn-primary">บันทึก</button>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById("previewDarkMode");
+        if (!el) return;
+        function s() {
+          document.documentElement.classList.toggle("dark", el.checked);
+        }
+        el.addEventListener("change", s);
+        s();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+# Test Cases — R2-02 ติดตามการรับชำระลูกหนี้ (AR Payment Tracking)
+
+| folder | jira | title | precondition | steps | expected_result | squad | priority | automation |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| R2-02 | | View invoice list with balance context | ผู้ใช้ login ด้วยสิทธิ์ finance | 1. เข้าเมนู Finance → Invoices<br>2. รอระบบโหลด | แสดงรายการ invoices พร้อม paidAmount, balanceDue และสถานะ | | High | |
+| R2-02 | | View invoice detail before recording payment | ผู้ใช้อยู่ที่หน้ารายการ invoices | 1. คลิกที่ invoice รายการหนึ่ง<br>2. รอหน้า detail โหลด | แสดงข้อมูล invoice พร้อม paidAmount, balanceDue และ payment history | | High | |
+| R2-02 | | Record partial payment | ผู้ใช้อยู่ที่หน้า AR Payment Workspace ของ invoice ที่ค้างชำระ | 1. คลิก "Add Payment"<br>2. กรอก paymentDate, amount ที่น้อยกว่า balanceDue<br>3. เลือก paymentMethod และ bankAccountId<br>4. กรอก referenceNo<br>5. คลิก "Save Payment" | ระบบบันทึก payment history และ invoice เปลี่ยนสถานะเป็น `partially_paid` | | High | |
+| R2-02 | | Record full payment to close invoice | ผู้ใช้อยู่ที่หน้า AR Payment ของ invoice ที่มียอดค้าง | 1. คลิก "Add Payment"<br>2. กรอก amount เท่ากับ balanceDue<br>3. กรอกข้อมูลอื่นครบ<br>4. คลิก "Save Payment" | Invoice เปลี่ยนสถานะเป็น `paid` และ balanceDue เป็น 0 | | High | |
+| R2-02 | | View payment history for invoice | ผู้ใช้อยู่ที่หน้า detail ของ invoice ที่มีประวัติการชำระ | 1. เปิดหน้า detail invoice<br>2. ดู section payment history | แสดงรายการ payment ทั้งหมดพร้อม date, amount, method, referenceNo | | High | |
+| R2-02 | | Payment amount exceeds balance | ผู้ใช้กำลังบันทึกรับชำระ | 1. คลิก "Add Payment"<br>2. กรอก amount ที่มากกว่า balanceDue<br>3. คลิก "Save Payment" | ระบบแสดง validation error ว่า amount เกิน balance ที่ค้างอยู่ | | High | |
+| R2-02 | | Payment with invalid bank account | ผู้ใช้กำลังบันทึกรับชำระ | 1. คลิก "Add Payment"<br>2. เลือก bankAccountId ที่ไม่ active<br>3. กรอกข้อมูลอื่นครบ<br>4. คลิก "Save Payment" | ระบบแสดง error ว่า bank account ไม่ถูกต้องหรือไม่ active | | High | |
+| R2-02 | | Change invoice status manually | ผู้ใช้อยู่ที่หน้า AR Payment Workspace | 1. คลิก "Change Status"<br>2. เลือกสถานะใหม่ตาม workflow rule<br>3. ยืนยัน | Invoice status เปลี่ยนตาม workflow ที่อนุญาต | | Medium | |
+| R2-02 | | Open AR Aging report | ผู้ใช้อยู่ที่หน้า AR Payment Workspace หรือเมนูรายงาน | 1. คลิก "Open AR Aging"<br>2. รอรายงานโหลด | แสดงรายงาน AR Aging พร้อม aging buckets ต่อ customer | | High | |
+| R2-02 | | Filter AR Aging by period | ผู้ใช้อยู่ที่หน้า AR Aging Report | 1. เลือกช่วง period / filters<br>2. คลิก "Apply Filters"<br>3. รอผลการกรอง | รายงานแสดงยอดลูกหนี้แยก bucket อายุหนี้ตามช่วงเวลาที่เลือก | | High | |
+| R2-02 | | AR Aging shows aging buckets per customer | ผู้ใช้อยู่ที่หน้า AR Aging Report | 1. ดูรายการใน AR Aging<br>2. ตรวจสอบข้อมูลต่อ customer | แสดงยอดหนี้แยกเป็น buckets (เช่น 0-30, 31-60, 61-90, 90+ วัน) ต่อ customer | | High | |
+| R2-02 | | Invoice status auto-updates after payment | ผู้ใช้บันทึกรับชำระสำเร็จ | 1. บันทึก payment<br>2. ดูสถานะ invoice หลังบันทึก | ระบบคำนวณ balanceDue ใหม่และอัปเดตสถานะ invoice อัตโนมัติ (partially_paid หรือ paid) | | High | |
+| R2-02 | | Access denied for non-finance user | ผู้ใช้ login ด้วย role ที่ไม่มีสิทธิ์ finance | 1. พยายามเข้า `/finance/invoices`<br>2. รอระบบตอบสนอง | ระบบแสดง access denied หรือ redirect | | High | |
+| R2-02 | | Load error shows proper error state | ระบบ backend มีปัญหา | 1. เปิดหน้า AR Payment ขณะ API ล้มเหลว<br>2. รอระบบตอบสนอง | แสดง error state แทนข้อมูล ผู้ใช้สามารถ retry ได้ | | Medium | |
+| R2-02 | | Payment missing required fields | ผู้ใช้กำลังบันทึกรับชำระ | 1. คลิก "Add Payment"<br>2. ไม่กรอก paymentDate หรือ amount<br>3. คลิก "Save Payment" | แสดง validation error ระบุ field ที่ต้องกรอก | | High | |

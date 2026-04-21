@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance — รายงานสรุป — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+    <style>
+      .period-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 12px;
+      }
+      .period-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+      .period-field label {
+        font-size: 12px;
+        color: var(--muted-foreground);
+        font-weight: 500;
+      }
+      .period-field .input {
+        width: 100%;
+        max-width: 200px;
+      }
+      .period-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .chip {
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        border: 1px solid var(--border);
+        background: var(--muted);
+        color: var(--foreground);
+        cursor: pointer;
+      }
+      .chip:hover {
+        background: var(--accent);
+      }
+      .kpi-grid-wrap {
+        position: relative;
+      }
+      .kpi-grid-wrap .overlay-busy {
+        border-radius: var(--radius-xl);
+      }
+      .kpi-foot {
+        font-size: 12px;
+        color: var(--muted-foreground);
+        margin-top: 8px;
+        line-height: 1.45;
+      }
+      .state-hidden {
+        display: none !important;
+      }
+      .url-hint {
+        font-size: 12px;
+        color: var(--muted-foreground);
+        font-family: ui-monospace, monospace;
+        word-break: break-all;
+      }
+      /* Charts: multi-month P&L clusters + expense/revenue gauge */
+      .viz-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .viz-cols {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        align-items: stretch;
+      }
+      @media (min-width: 720px) {
+        .viz-cols--gauge {
+          max-width: 420px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
+      .viz-panel {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        background: color-mix(in srgb, var(--muted) 35%, var(--card));
+      }
+      .monthly-chart-scroll {
+        overflow-x: auto;
+        padding-bottom: 4px;
+        margin: 0 -4px;
+      }
+      .monthly-chart {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        gap: 12px;
+        min-height: 168px;
+        padding: 12px 8px 4px;
+        border-bottom: 1px solid var(--border);
+      }
+      .month-cluster {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        min-width: 72px;
+        max-width: 120px;
+      }
+      .month-tri-bars {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 4px;
+        height: 120px;
+      }
+      .month-mini-bar {
+        width: 14px;
+        border-radius: 3px 3px 0 0;
+        min-height: 3px;
+        transition: height 0.2s ease;
+      }
+      .month-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--foreground);
+        text-align: center;
+        line-height: 1.25;
+      }
+      .month-api {
+        font-size: 10px;
+        color: var(--muted-foreground);
+        font-family: ui-monospace, monospace;
+      }
+      .chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 14px;
+        font-size: 11px;
+        color: var(--muted-foreground);
+      }
+      .chart-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .chart-legend i {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        font-style: normal;
+      }
+      .viz-subtitle {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--foreground);
+        margin: 0 0 4px;
+      }
+      .viz-hint {
+        font-size: 11px;
+        color: var(--muted-foreground);
+        margin: 0 0 16px;
+        line-height: 1.45;
+      }
+      .bar--rev {
+        background: var(--primary);
+      }
+      .bar--exp {
+        background: color-mix(in srgb, var(--muted-foreground) 72%, var(--border));
+      }
+      .bar--profit {
+        background: color-mix(in srgb, var(--success-fg) 88%, var(--primary));
+      }
+      .ratio-gauge__formula {
+        font-size: 11px;
+        color: var(--muted-foreground);
+        margin: 0 0 12px;
+        font-family: ui-monospace, monospace;
+      }
+      .ratio-gauge__track-wrap {
+        position: relative;
+        margin-bottom: 10px;
+      }
+      .ratio-gauge__ticks {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--muted-foreground);
+        margin-bottom: 4px;
+      }
+      .ratio-gauge__track {
+        position: relative;
+        height: 16px;
+        border-radius: 9999px;
+        background: linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--success-fg) 22%, var(--muted)) 0%,
+          color-mix(in srgb, var(--warning-fg) 25%, var(--muted)) 50%,
+          color-mix(in srgb, var(--destructive) 18%, var(--muted)) 100%
+        );
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .ratio-gauge__fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 71.2%;
+        border-radius: inherit;
+        background: var(--primary);
+        opacity: 0.92;
+        box-shadow: 2px 0 8px color-mix(in srgb, var(--primary) 35%, transparent);
+      }
+      .ratio-gauge__needle {
+        position: absolute;
+        left: 71.2%;
+        top: -4px;
+        z-index: 2;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 9px solid var(--foreground);
+        opacity: 0.85;
+      }
+      .ratio-gauge__value {
+        font-size: 22px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+        margin: 4px 0 0;
+      }
+      .ratio-gauge__caption {
+        font-size: 12px;
+        color: var(--muted-foreground);
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — ReportsPage · กราฟ 3 แท่งรายเดือน + เกจช่วงรวม</span>
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+        <label class="preview-toggle"
+          ><input type="radio" name="previewState" value="default" checked /> ปกติ</label
+        >
+        <label class="preview-toggle"
+          ><input type="radio" name="previewState" value="loading" /> โหลด</label
+        >
+        <label class="preview-toggle"
+          ><input type="radio" name="previewState" value="error" /> Error</label
+        >
+        <label class="preview-toggle"
+          ><input type="radio" name="previewState" value="invalid" /> ช่วงไม่ถูกต้อง</label
+        >
+        <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+      </div>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link active" href="#">รายงาน</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">รายงานการเงิน</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <div>
+              <h1 class="m-0">สรุปการเงิน</h1>
+              <p id="appliedPeriodLine">ช่วงที่แสดง: ม.ค. 2568 – มี.ค. 2568 (อ้างอิง API: 2026-01 … 2026-03)</p>
+            </div>
+          </div>
+
+          <div class="card card-pad stack-y-4">
+            <div class="text-muted text-xs" style="margin: 0">
+              เลือกช่วงเดือน (รูปแบบ <strong>YYYY-MM</strong> ตาม BR) แล้วกด «นำมาแสดง» — ค่าช่วงเก็บใน URL
+              <code class="url-hint">?periodFrom=&amp;periodTo=</code> เพื่อแชร์ลิงก์
+            </div>
+            <div class="period-toolbar">
+              <div class="period-field">
+                <label for="periodFrom">ตั้งแต่เดือน</label>
+                <input id="periodFrom" class="input" type="month" value="2026-01" />
+              </div>
+              <div class="period-field">
+                <label for="periodTo">ถึงเดือน</label>
+                <input id="periodTo" class="input" type="month" value="2026-03" />
+              </div>
+              <div class="period-actions">
+                <button type="button" class="btn btn-primary btn-sm" id="btnApply">นำมาแสดง</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnRefresh">รีเฟรช</button>
+              </div>
+            </div>
+            <div class="chip-row">
+              <span class="text-muted text-xs" style="margin-right: 4px">ช่วงด่วน:</span>
+              <button type="button" class="chip" data-preset="thisMonth">เดือนนี้</button>
+              <button type="button" class="chip" data-preset="thisQuarter">ไตรมาสนี้</button>
+              <button type="button" class="chip" data-preset="thisYear">ปีนี้ (ค.ศ.)</button>
+            </div>
+            <div id="inlineValidation" class="alert-warn state-hidden" role="alert">
+              เดือนเริ่มต้นต้องไม่เกินเดือนสิ้นสุด — แก้ช่วงแล้วกด «นำมาแสดง» อีกครั้ง
+            </div>
+          </div>
+
+          <div id="blockError" class="alert-error state-hidden flex-row" style="justify-content: space-between">
+            <span>โหลดสรุปไม่สำเร็จ (เช่น timeout หรือ 5xx) — ลองใหม่ได้</span>
+            <button type="button" class="btn btn-sm btn-primary" id="btnRetry">ลองอีกครั้ง</button>
+          </div>
+
+          <div id="vizBlock" class="card card-pad" aria-label="กราฟสรุป P&amp;L และอัตราส่วน">
+            <h2 class="m-0" style="font-size: 15px; font-weight: 600">ภาพรวมจากชุดเดียวกับ KPI</h2>
+            <p class="text-muted text-xs" style="margin: 4px 0 16px">
+              <strong>กราฟรายเดือน:</strong> จำลองผลจากยิง
+              <code class="url-hint">GET …/summary?periodFrom=Mi&amp;periodTo=Mi</code> ทีละเดือน — แต่ละคอลัมน์ = รายได้ / ค่าใช้จ่าย / กำไรของเดือนนั้น (ความสูงเทียบรายได้เดือนนั้น = 100%) ·
+              <strong>เกจ:</strong> จาก summary รวมช่วงหนึ่งครั้ง
+            </p>
+            <div class="viz-stack">
+              <div class="viz-panel">
+                <h3 class="viz-subtitle">รายได้ · ค่าใช้จ่าย · กำไรสุทธิ (รายเดือน)</h3>
+                <p id="monthlyChartHint" class="viz-hint">
+                  ปรับช่วงด้านบนแล้วกด «นำมาแสดง» — แผงนี้สะท้อนจำนวนเดือนในช่วง (ข้อมูลตัวเลขจำลองสำหรับ preview)
+                </p>
+                <div class="monthly-chart-scroll">
+                  <div id="monthlyChart" class="monthly-chart" role="img" aria-label="กราฟแท่งรายเดือน"></div>
+                </div>
+                <div class="chart-legend" aria-hidden="true">
+                  <span><i class="bar--rev"></i> รายได้</span>
+                  <span><i class="bar--exp"></i> ค่าใช้จ่าย</span>
+                  <span><i class="bar--profit"></i> กำไรสุทธิ</span>
+                </div>
+              </div>
+              <div class="viz-cols viz-cols--gauge">
+                <div class="viz-panel">
+                  <h3 class="viz-subtitle">อัตราส่วนค่าใช้จ่ายต่อรายได้ (ทั้งช่วง)</h3>
+                  <p class="ratio-gauge__formula">expense ÷ revenue → 890,000 ÷ 1,250,000</p>
+                  <div class="ratio-gauge__track-wrap">
+                    <div class="ratio-gauge__ticks">
+                      <span>0%</span>
+                      <span>50%</span>
+                      <span>100% = เท่ารายได้</span>
+                    </div>
+                    <div class="ratio-gauge__track" role="img" aria-label="เกจอัตราส่วน 71.2%">
+                      <div class="ratio-gauge__fill"></div>
+                      <div class="ratio-gauge__needle" aria-hidden="true"></div>
+                    </div>
+                  </div>
+                  <p class="ratio-gauge__value">71.2%</p>
+                  <p class="ratio-gauge__caption">
+                    ค่าใช้จ่ายราว <strong>71%</strong> ของรายได้ในรอบนี้ — ถ้ารายได้เป็น 0 ให้ซ่อนเกจและแสดงข้อความแทน (ไม่หาร)
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-grid-wrap">
+            <div id="kpiLoading" class="overlay-busy state-hidden">
+              <div class="spinner" aria-hidden="true"></div>
+              <span class="overlay-busy__text">กำลังโหลดสรุป…</span>
+            </div>
+            <div class="grid-3" id="kpiGrid">
+              <div class="card card-pad">
+                <div class="text-muted text-xs">รายได้รวม</div>
+                <div class="kpi-value">฿1,250,000.00</div>
+              </div>
+              <div class="card card-pad">
+                <div class="text-muted text-xs">ค่าใช้จ่ายรวม</div>
+                <div class="kpi-value">฿890,000.00</div>
+              </div>
+              <div class="card card-pad">
+                <div class="text-muted text-xs">กำไรสุทธิ</div>
+                <div class="kpi-value">฿360,000.00</div>
+              </div>
+              <div class="card card-pad">
+                <div class="text-muted text-xs">ลูกหนี้รวม (AR)</div>
+                <div class="kpi-value">฿420,000.00</div>
+                <div class="kpi-foot">
+                  หมายเหตุ: ยอด AR จากใบแจ้งหนี้อาจคลาดเคลื่อนเมื่อมีชำระบางส่วน — ดูรายละเอียดที่ใบแจ้งหนี้
+                </div>
+              </div>
+              <div class="card card-pad">
+                <div class="text-muted text-xs">เจ้าหนี้รวม (AP)</div>
+                <div class="kpi-value">฿310,000.00</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-pad">
+            <div class="text-muted text-xs" style="margin-bottom: 8px">ขอบเขต R1</div>
+            <p class="m-0" style="font-size: 13px; color: var(--muted-foreground); line-height: 1.5">
+              หน้านี้เป็นสรุป KPI เท่านั้น งบ P&amp;L / Balance Sheet / Cash Flow และ export แบบเต็มอยู่ใน scope
+              R2 — ดูเอกสาร UX ที่อ้างอิงใน Reports.md
+            </p>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var dark = document.getElementById("previewDarkMode");
+        if (dark) {
+          dark.addEventListener("change", function () {
+            document.documentElement.classList.toggle("dark", dark.checked);
+          });
+          document.documentElement.classList.toggle("dark", dark.checked);
+        }
+
+        var inlineVal = document.getElementById("inlineValidation");
+        var blockError = document.getElementById("blockError");
+        var kpiLoading = document.getElementById("kpiLoading");
+        var kpiGrid = document.getElementById("kpiGrid");
+        var vizBlock = document.getElementById("vizBlock");
+
+        function setState(name) {
+          var isLoading = name === "loading";
+          var isError = name === "error";
+          var isInvalid = name === "invalid";
+          inlineVal.classList.toggle("state-hidden", !isInvalid);
+          blockError.classList.toggle("state-hidden", !isError);
+          kpiLoading.classList.toggle("state-hidden", !isLoading);
+          kpiGrid.style.opacity = isLoading ? "0.45" : "1";
+          kpiGrid.style.pointerEvents = isLoading ? "none" : "";
+          if (vizBlock) {
+            vizBlock.style.opacity = isLoading || isError ? "0.45" : "1";
+            vizBlock.style.pointerEvents = isLoading || isError ? "none" : "";
+          }
+        }
+
+        document.querySelectorAll('input[name="previewState"]').forEach(function (r) {
+          r.addEventListener("change", function () {
+            if (r.checked) setState(r.value);
+          });
+        });
+        setState("default");
+
+        document.getElementById("btnApply").addEventListener("click", function () {
+          var from = document.getElementById("periodFrom").value;
+          var to = document.getElementById("periodTo").value;
+          if (from && to && from > to) {
+            document.querySelector('input[name="previewState"][value="invalid"]').checked = true;
+            setState("invalid");
+            return;
+          }
+          document.querySelector('input[name="previewState"][value="default"]').checked = true;
+          setState("default");
+          renderMonthlyChart();
+        });
+
+        document.getElementById("btnRetry").addEventListener("click", function () {
+          document.querySelector('input[name="previewState"][value="default"]').checked = true;
+          setState("default");
+        });
+
+        function pad(n) {
+          return n < 10 ? "0" + n : String(n);
+        }
+        function ymd(d) {
+          return d.getFullYear() + "-" + pad(d.getMonth() + 1);
+        }
+        document.querySelectorAll(".chip[data-preset]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var now = new Date();
+            var y = now.getFullYear();
+            var m = now.getMonth();
+            var from,
+              to = ymd(now);
+            if (btn.getAttribute("data-preset") === "thisMonth") {
+              from = to;
+            } else if (btn.getAttribute("data-preset") === "thisQuarter") {
+              var qStart = Math.floor(m / 3) * 3;
+              from = y + "-" + pad(qStart + 1);
+            } else {
+              from = y + "-01";
+            }
+            document.getElementById("periodFrom").value = from;
+            document.getElementById("periodTo").value = to;
+            renderMonthlyChart();
+          });
+        });
+
+        var THAI_MO = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+        function parseYM(s) {
+          var p = s.split("-");
+          return { y: +p[0], m: +p[1] };
+        }
+        function ymKey(y, m) {
+          return y + "-" + pad(m);
+        }
+        function enumerateMonths(fromStr, toStr) {
+          var a = parseYM(fromStr);
+          var b = parseYM(toStr);
+          var out = [];
+          var y = a.y,
+            m = a.m;
+          while (y < b.y || (y === b.y && m <= b.m)) {
+            out.push(ymKey(y, m));
+            m += 1;
+            if (m > 12) {
+              m = 1;
+              y += 1;
+            }
+          }
+          return out;
+        }
+        function mockPlForMonth(ym, idx) {
+          var h = 0;
+          var i = 0;
+          for (; i < ym.length; i++) h = (h * 31 + ym.charCodeAt(i)) >>> 0;
+          var rev = 320000 + (h % 180000) + idx * 25000;
+          var ratio = 0.62 + ((h >> 3) % 14) / 100;
+          var exp = Math.round(rev * ratio);
+          var profit = rev - exp;
+          return { rev: rev, exp: exp, profit: profit };
+        }
+        function fmtShort(n) {
+          if (n >= 1000000) return (n / 1000000).toFixed(2) + "M";
+          if (n >= 1000) return Math.round(n / 1000) + "K";
+          return String(n);
+        }
+        function renderMonthlyChart() {
+          var el = document.getElementById("monthlyChart");
+          var hint = document.getElementById("monthlyChartHint");
+          if (!el) return;
+          var from = document.getElementById("periodFrom").value;
+          var to = document.getElementById("periodTo").value;
+          el.innerHTML = "";
+          var ymRe = /^\d{4}-\d{2}$/;
+          if (!ymRe.test(from) || !ymRe.test(to) || from > to) {
+            if (hint) hint.textContent = "เลือกช่วง ตั้งแต่–ถึง (YYYY-MM) ให้ถูกต้อง";
+            return;
+          }
+          var months = enumerateMonths(from, to);
+          var cap = 36;
+          var capped = months.length > cap;
+          if (capped) months = months.slice(0, cap);
+          if (hint) {
+            hint.textContent =
+              months.length +
+              " เดือนในช่วง — แท่งจำลองต่อเดือน (preview)" +
+              (capped ? " · แสดงสูงสุด " + cap + " เดือน" : "");
+          }
+          var maxH = 108;
+          months.forEach(function (ym, idx) {
+            var pl = mockPlForMonth(ym, idx);
+            var parts = ym.split("-");
+            var mi = +parts[1];
+            var buddha = +parts[0] + 543;
+            var label = THAI_MO[mi - 1] + " " + String(buddha).slice(-2);
+            var hr = (pl.exp / pl.rev) * maxH;
+            var hp = (pl.profit / pl.rev) * maxH;
+            if (hp < 0) hp = 0;
+            var cluster = document.createElement("div");
+            cluster.className = "month-cluster";
+            cluster.innerHTML =
+              '<div class="month-tri-bars" title="' +
+              ym +
+              ": รายได้ " +
+              pl.rev +
+              " · ค่าใช้จ่าย " +
+              pl.exp +
+              " · กำไร " +
+              pl.profit +
+              '">' +
+              '<div class="month-mini-bar bar--rev" style="height:' +
+              maxH +
+              'px"></div>' +
+              '<div class="month-mini-bar bar--exp" style="height:' +
+              Math.min(maxH, hr).toFixed(1) +
+              'px"></div>' +
+              '<div class="month-mini-bar bar--profit" style="height:' +
+              Math.min(maxH, hp).toFixed(1) +
+              'px"></div>' +
+              "</div>" +
+              '<span class="month-label">' +
+              label +
+              "</span>" +
+              '<span class="month-api">' +
+              ym +
+              "</span>" +
+              '<span class="month-api" style="margin-top:2px">฿' +
+              fmtShort(pl.rev) +
+              " / ฿" +
+              fmtShort(pl.exp) +
+              "</span>";
+            el.appendChild(cluster);
+          });
+        }
+        ["periodFrom", "periodTo"].forEach(function (id) {
+          var inp = document.getElementById(id);
+          if (inp) inp.addEventListener("change", renderMonthlyChart);
+        });
+        renderMonthlyChart();
+      })();
+    </script>
+  </body>
+</html>

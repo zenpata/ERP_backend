@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HR — แผนก &amp; ตำแหน่ง — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — OrganizationPage (control-panel + โมดัลตาม MD_TO_PREVIEW_HTML_MANUAL)</span>
+      <span class="text-muted" style="font-size: 12px"
+        ><a href="../MD_TO_PREVIEW_HTML_MANUAL.md">คู่มือแปลง MD→HTML</a> ·
+        <a href="./DepartmentForm.preview.html">DepartmentForm.preview.html</a> ·
+        <a href="./PositionForm.preview.html">PositionForm.preview.html</a></span
+      >
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link" href="#">รายชื่อพนักงาน</a>
+          <a class="nav-link active" href="#">แผนก &amp; ตำแหน่ง</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">แผนก &amp; ตำแหน่ง</span>
+          <div class="header-actions">
+            <button type="button" class="icon-btn">🔔</button>
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-4">
+          <div class="page-header">
+            <h1 class="m-0">องค์กร</h1>
+          </div>
+
+          <div class="control-panel" style="max-width: 560px">
+            <h2>Preview controls</h2>
+            <div class="control-row" style="flex-wrap: wrap; gap: 12px">
+              <span class="text-muted" style="font-size: 12px">สถานะรายการ:</span>
+              <label class="control-row" style="margin: 0">
+                <input type="radio" name="listState" value="default" checked />
+                <span>ปกติ</span>
+              </label>
+              <label class="control-row" style="margin: 0">
+                <input type="radio" name="listState" value="loading" />
+                <span>กำลังโหลด</span>
+              </label>
+              <label class="control-row" style="margin: 0">
+                <input type="radio" name="listState" value="empty" />
+                <span>ว่าง</span>
+              </label>
+              <label class="control-row" style="margin: 0">
+                <input type="radio" name="listState" value="error" />
+                <span>ข้อผิดพลาด</span>
+              </label>
+            </div>
+            <label class="control-row">
+              <input type="checkbox" id="previewDarkMode" />
+              <span>Dark mode</span>
+            </label>
+          </div>
+
+          <div class="grid-2 grid-auto-320">
+            <div class="card card-overflow" style="position: relative">
+              <div class="card-head">แผนก</div>
+              <div class="card-pad stack-y-4">
+                <div class="flex-row">
+                  <input class="input input-flex-1" placeholder="ค้นหา" />
+                  <select class="text-input select-auto"><option>แม่แบบทั้งหมด</option></select>
+                </div>
+                <button type="button" class="btn btn-sm" id="btnAddDept">+ เพิ่มแผนก</button>
+
+                <div data-state-panel="default">
+                  <div class="divide-y divide-box">
+                    <div class="p-4 flex-row flex-between">
+                      <div>
+                        <strong>D001 ฝ่ายขาย</strong>
+                        <div class="text-muted text-xs">แม่แบบ: —</div>
+                      </div>
+                      <div class="flex-row">
+                        <button type="button" class="icon-btn">👁</button>
+                        <button type="button" class="icon-btn">✎</button>
+                      </div>
+                    </div>
+                    <div class="p-4 flex-row flex-between">
+                      <div>
+                        <strong>D002 ฝ่ายบัญชี</strong>
+                      </div>
+                      <div class="flex-row">
+                        <button type="button" class="icon-btn">👁</button>
+                        <button type="button" class="icon-btn">✎</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div data-state-panel="loading" hidden>
+                  <div class="skeleton-stack">
+                    <div class="skeleton-line skeleton-line--lg"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                  </div>
+                </div>
+
+                <div data-state-panel="empty" hidden>
+                  <p class="text-muted text-center" style="margin: 24px 0">ยังไม่มีแผนก — กดเพิ่มแผนกเพื่อเริ่มต้น</p>
+                </div>
+
+                <div data-state-panel="error" hidden>
+                  <p class="error-text">โหลดรายการแผนกไม่สำเร็จ (502)</p>
+                  <button type="button" class="btn btn-sm">ลองใหม่</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card card-overflow" style="position: relative">
+              <div class="card-head">ตำแหน่ง</div>
+              <div class="card-pad stack-y-4">
+                <div class="flex-row">
+                  <input class="input input-flex-1" placeholder="ค้นหา" />
+                  <select class="text-input select-auto"><option>ทุกแผนก</option></select>
+                </div>
+                <button type="button" class="btn btn-sm" id="btnAddPos">+ เพิ่มตำแหน่ง</button>
+
+                <div data-state-panel="default">
+                  <div class="divide-y divide-box">
+                    <div class="p-4 flex-row flex-between">
+                      <div>
+                        <strong>P001 ผู้จัดการ</strong>
+                        <div class="text-muted text-xs">ระดับ: 3 · แผนก: ขาย</div>
+                      </div>
+                      <div class="flex-row">
+                        <button type="button" class="icon-btn">👁</button>
+                        <button type="button" class="icon-btn">✎</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div data-state-panel="loading" hidden>
+                  <div class="skeleton-stack">
+                    <div class="skeleton-line skeleton-line--lg"></div>
+                    <div class="skeleton-line"></div>
+                  </div>
+                </div>
+
+                <div data-state-panel="empty" hidden>
+                  <p class="text-muted text-center" style="margin: 24px 0">ยังไม่มีตำแหน่งในระบบ</p>
+                </div>
+
+                <div data-state-panel="error" hidden>
+                  <p class="error-text">โหลดรายการตำแหน่งไม่สำเร็จ</p>
+                  <button type="button" class="btn btn-sm">ลองใหม่</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- DepartmentFormModal -->
+    <div class="modal-backdrop" id="modalDept" hidden role="presentation">
+      <div class="modal-dialog modal-dialog--wide" role="dialog" aria-modal="true" aria-labelledby="deptModalTitle">
+        <div class="modal-dialog__head flex-row flex-between" style="align-items: flex-start">
+          <h1 id="deptModalTitle" style="margin: 0">เพิ่มแผนก</h1>
+          <button type="button" class="icon-btn" id="btnCloseDept" aria-label="ปิด">✕</button>
+        </div>
+        <div class="modal-dialog__body stack-y-4">
+          <div class="grid-2">
+            <div class="field">
+              <span class="label">รหัสแผนก *</span>
+              <input class="input text-mono" placeholder="เช่น D003" />
+            </div>
+            <div class="field">
+              <span class="label">ชื่อแผนก *</span>
+              <input class="input" placeholder="เช่น ฝ่ายการตลาด" />
+            </div>
+            <div class="field">
+              <span class="label">แผนกแม่</span>
+              <select class="text-input">
+                <option value="">— ไม่มี —</option>
+                <option>D001 ฝ่ายขาย</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="label">ผู้จัดการแผนก</span>
+              <select class="text-input">
+                <option value="">— ยังไม่ระบุ —</option>
+                <option>EMP-01 สมชาย ใจดี</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-dialog__foot">
+          <button type="button" class="btn btn-sm" id="btnCancelDept">ยกเลิก</button>
+          <button type="button" class="btn btn-primary btn-sm">บันทึกแผนก</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PositionFormModal -->
+    <div class="modal-backdrop" id="modalPos" hidden role="presentation">
+      <div class="modal-dialog modal-dialog--wide" role="dialog" aria-modal="true" aria-labelledby="posModalTitle">
+        <div class="modal-dialog__head flex-row flex-between" style="align-items: flex-start">
+          <h1 id="posModalTitle" style="margin: 0">เพิ่มตำแหน่ง</h1>
+          <button type="button" class="icon-btn" id="btnClosePos" aria-label="ปิด">✕</button>
+        </div>
+        <div class="modal-dialog__body stack-y-4">
+          <div class="grid-2">
+            <div class="field">
+              <span class="label">รหัสตำแหน่ง *</span>
+              <input class="input text-mono" placeholder="เช่น P010" />
+            </div>
+            <div class="field">
+              <span class="label">ชื่อตำแหน่ง *</span>
+              <input class="input" placeholder="เช่น หัวหน้าทีมขาย" />
+            </div>
+            <div class="field field-span-full">
+              <span class="label">แผนก *</span>
+              <select class="text-input">
+                <option value="">— เลือกแผนก —</option>
+                <option selected>D001 ฝ่ายขาย</option>
+                <option>D002 ฝ่ายบัญชี</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="label">ระดับตำแหน่ง</span>
+              <input class="input" type="number" min="1" max="99" placeholder="เช่น 4" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-dialog__foot">
+          <button type="button" class="btn btn-sm" id="btnCancelPos">ยกเลิก</button>
+          <button type="button" class="btn btn-primary btn-sm">บันทึกตำแหน่ง</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        function setDark(checked) {
+          document.documentElement.classList.toggle("dark", checked);
+        }
+        var dark = document.getElementById("previewDarkMode");
+        if (dark) {
+          dark.addEventListener("change", function () {
+            setDark(dark.checked);
+          });
+          setDark(dark.checked);
+        }
+
+        function applyListState(state) {
+          document.querySelectorAll("[data-state-panel]").forEach(function (el) {
+            var p = el.getAttribute("data-state-panel");
+            el.hidden = p !== state;
+          });
+        }
+        document.querySelectorAll('input[name="listState"]').forEach(function (r) {
+          r.addEventListener("change", function () {
+            if (r.checked) applyListState(r.value);
+          });
+        });
+        applyListState("default");
+
+        function closeModals() {
+          var md = document.getElementById("modalDept");
+          var mp = document.getElementById("modalPos");
+          if (md) md.hidden = true;
+          if (mp) mp.hidden = true;
+        }
+        function openDept() {
+          var md = document.getElementById("modalDept");
+          var mp = document.getElementById("modalPos");
+          if (mp) mp.hidden = true;
+          if (md) md.hidden = false;
+        }
+        function openPos() {
+          var md = document.getElementById("modalDept");
+          var mp = document.getElementById("modalPos");
+          if (md) md.hidden = true;
+          if (mp) mp.hidden = false;
+        }
+
+        var bd = document.getElementById("btnAddDept");
+        var bp = document.getElementById("btnAddPos");
+        if (bd) bd.addEventListener("click", openDept);
+        if (bp) bp.addEventListener("click", openPos);
+
+        ["btnCloseDept", "btnCancelDept", "btnClosePos", "btnCancelPos"].forEach(function (id) {
+          var b = document.getElementById(id);
+          if (b) b.addEventListener("click", closeModals);
+        });
+
+        var modalDept = document.getElementById("modalDept");
+        var modalPos = document.getElementById("modalPos");
+        if (modalDept) {
+          modalDept.addEventListener("click", function (e) {
+            if (e.target === modalDept) closeModals();
+          });
+        }
+        if (modalPos) {
+          modalPos.addEventListener("click", function (e) {
+            if (e.target === modalPos) closeModals();
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

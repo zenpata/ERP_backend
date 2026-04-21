@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HR — เงินเดือน — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — PayrollPage</span>
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link active" href="#">เงินเดือน</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">เงินเดือน</span>
+          <div class="header-actions">
+            <button type="button" class="icon-btn">🔔</button>
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">เงินเดือน</h1>
+          </div>
+
+          <div class="card card-pad">
+            <h3 class="section-title">สร้าง Payroll run</h3>
+            <div class="flex-row">
+              <label class="text-muted">เดือน <input class="input input-w-64" type="number" value="4" /></label>
+              <label class="text-muted">ปี <input class="input input-w-80" type="number" value="2567" /></label>
+              <button type="button" class="btn btn-primary btn-sm">สร้าง</button>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="section-title--spaced">Payroll runs</h3>
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>งวด</th>
+                    <th>สถานะ</th>
+                    <th>จำนวน payslip</th>
+                    <th>การทำงาน</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>4/2567</td>
+                    <td><span class="badge badge-outline">draft</span></td>
+                    <td>0</td>
+                    <td><a href="#" class="link">ประมวลผล</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="section-title--spaced">สลิปเงินเดือน</h3>
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>งวด</th>
+                    <th>พนักงาน</th>
+                    <th>ฐาน</th>
+                    <th>สุทธิ</th>
+                    <th>สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>2025-04</td>
+                    <td>สมชาย ใจดี</td>
+                    <td>฿35,000</td>
+                    <td>฿32,100</td>
+                    <td><span class="badge badge-success">paid</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById("previewDarkMode");
+        if (!el) return;
+        function s() {
+          document.documentElement.classList.toggle("dark", el.checked);
+        }
+        el.addEventListener("change", s);
+        s();
+      })();
+    </script>
+  </body>
+</html>

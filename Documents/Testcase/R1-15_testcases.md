@@ -1,0 +1,21 @@
+# Test Cases — R1-15 Settings: จัดการผู้ใช้ (User Management)
+
+| folder | jira | title | precondition | steps | expected_result | squad | priority | automation |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| R1-15 | | View user list | ผู้ใช้ login ด้วย role `super_admin` | 1. เข้าเมนู Settings → Users<br>2. รอระบบโหลด | แสดงรายการ users ทั้งหมดพร้อม employee info, roles และสถานะ active | | High | |
+| R1-15 | | Search users in list | ผู้ใช้อยู่ที่หน้า user list | 1. พิมพ์ชื่อหรืออีเมลในช่องค้นหา<br>2. รอผลการค้นหา | แสดงเฉพาะ users ที่ตรงกับคำค้นหา | | Medium | |
+| R1-15 | | Create new user linked to employee | ผู้ใช้มีสิทธิ์จัดการ users และมีพนักงาน active ที่ยังไม่มี user account | 1. คลิก "Create User"<br>2. เลือก employeeId ของพนักงานที่ยังไม่มี user<br>3. กรอก email<br>4. กรอก password<br>5. คลิก "Create" | สร้าง user ใหม่สำเร็จ ผูกกับพนักงานที่เลือก สามารถ login ได้ | | High | |
+| R1-15 | | Create user with mustChangePassword flag | ผู้ใช้มีสิทธิ์จัดการ users | 1. คลิก "Create User"<br>2. กรอกข้อมูล user<br>3. เปิดใช้งาน `mustChangePassword = true`<br>4. คลิก "Create" | สร้าง user สำเร็จ เมื่อ user นั้น login ครั้งแรก ระบบบังคับให้เปลี่ยนรหัสผ่านก่อนใช้งาน | | High | |
+| R1-15 | | First login forces password change | ผู้ใช้ถูกสร้างด้วย `mustChangePassword = true` | 1. Login ด้วย credentials ที่ admin สร้างให้<br>2. รอระบบตอบสนอง | ระบบ redirect ไปหน้าเปลี่ยนรหัสผ่าน และจำกัดการใช้งานเต็มรูปแบบจนกว่าจะเปลี่ยนรหัสผ่าน | | High | |
+| R1-15 | | Create user fails with duplicate email | ผู้ใช้กำลังสร้าง user ใหม่ | 1. กรอก email ที่มี user อื่นใช้อยู่แล้ว<br>2. กรอกข้อมูลอื่น<br>3. คลิก "Create" | แสดง error ว่า email ซ้ำ ระบบไม่สร้าง user | | High | |
+| R1-15 | | Create user fails when employee already has account | ผู้ใช้กำลังสร้าง user | 1. เลือก employeeId ที่มี user account อยู่แล้ว<br>2. กรอกข้อมูลอื่น<br>3. คลิก "Create" | แสดง error ว่าพนักงานคนนี้มี user account อยู่แล้ว | | High | |
+| R1-15 | | Create user fails when employee is not active | ผู้ใช้กำลังสร้าง user | 1. เลือก employeeId ที่ไม่ active<br>2. กรอกข้อมูลอื่น<br>3. คลิก "Create" | แสดง error ว่าพนักงานต้องมีสถานะ active เท่านั้น | | High | |
+| R1-15 | | Assign roles to user | ผู้ใช้มีสิทธิ์จัดการ users | 1. เปิด user ที่ต้องการ<br>2. คลิก "Assign Roles"<br>3. เลือก roles ที่ต้องการ<br>4. คลิก "Save Roles" | Roles ของ user ถูกอัปเดตสำเร็จ | | High | |
+| R1-15 | | Cannot change roles of super_admin | ผู้ใช้มีสิทธิ์จัดการ users | 1. เปิด user ที่มี role `super_admin`<br>2. พยายาม assign หรือ remove roles | ระบบ block การเปลี่ยน roles ของ `super_admin` | | High | |
+| R1-15 | | Activate inactive user | ผู้ใช้มีสิทธิ์จัดการ users | 1. เปิด user ที่มีสถานะ inactive<br>2. คลิก Toggle Active (activate)<br>3. ยืนยัน | User ถูก activate สำเร็จ สามารถ login ได้อีกครั้ง | | High | |
+| R1-15 | | Deactivate user | ผู้ใช้มีสิทธิ์จัดการ users | 1. เปิด user ที่มีสถานะ active<br>2. คลิก Toggle Active (deactivate)<br>3. ยืนยัน | User ถูก deactivate สำเร็จ active session ถูก logout อัตโนมัติ | | High | |
+| R1-15 | | Cannot deactivate own account | ผู้ใช้พยายาม deactivate บัญชีของตัวเอง | 1. เปิด user ที่เป็นบัญชีของตัวเอง<br>2. คลิก Toggle Active (deactivate)<br>3. ยืนยัน | ระบบปฏิเสธการ deactivate ตัวเองเพื่อป้องกัน self-lockout | | High | |
+| R1-15 | | Deactivated user cannot login | ผู้ใช้ถูก deactivate | 1. พยายาม login ด้วย credentials ของ user ที่ถูก deactivate<br>2. รอระบบตอบสนอง | ระบบปฏิเสธการ login และแสดงข้อความ error ทั่วไป | | High | |
+| R1-15 | | Access denied for non-admin user | ผู้ใช้ login ด้วย role ที่ไม่ใช่ admin | 1. พยายามเข้า `/settings/users`<br>2. รอระบบตอบสนอง | แสดง access denied หรือ redirect | | High | |
+| R1-15 | | Admin resets password for user | ผู้ใช้ login ด้วย role `super_admin` และเปิดหน้า User Detail | 1. คลิกปุ่ม "Reset Password"<br>2. กรอก newPassword ที่ผ่าน policy<br>3. เปิด toggle mustChangePassword<br>4. คลิก "บันทึก" | รหัสผ่านถูก reset สำเร็จ user ยังคง login ได้ด้วยรหัสใหม่ | | High | |
+| R1-15 | | Reset password sets mustChangePassword flag | ผู้ใช้ super_admin reset password พร้อมเปิด mustChangePassword | 1. Reset password พร้อม toggle mustChangePassword = true<br>2. User เป้าหมาย login ด้วยรหัสใหม่ | ระบบ redirect user ที่ถูก reset ไปหน้าเปลี่ยนรหัสผ่านทันทีหลัง login | | High | |

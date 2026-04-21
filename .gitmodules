@@ -1,3 +1,6 @@
 [submodule "erp_frontend"]
 	path = erp_frontend
 	url = https://github.com/zenpata/ERP_frontend.git
+[submodule "erp_backend"]
+	path = erp_backend
+	url = https://github.com/zenpata/erp_backend.git

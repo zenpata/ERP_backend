@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HR — โปรไฟล์พนักงาน — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — EmployeeDetailPage</span>
+      <label class="preview-toggle"
+        ><input type="checkbox" id="previewDarkMode" /> Dark mode</label
+      >
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">HR</div>
+          <a class="nav-link active" href="#">รายชื่อพนักงาน</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">โปรไฟล์พนักงาน</span>
+          <div class="header-actions">
+            <button type="button" class="icon-btn">🔔</button>
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content max-w-2xl stack-y-4">
+          <div class="breadcrumb"><a href="#">รายชื่อพนักงาน</a> / EMP001 สมชาย ใจดี</div>
+
+          <div class="card card-pad profile-hero">
+            <div class="avatar-tile-lg" aria-hidden="true">ส</div>
+            <div class="profile-meta">
+              <h2 class="h2-profile">สมชาย ใจดี</h2>
+              <p class="text-muted">Somchai Jaidee · EMP001</p>
+              <div class="flex-row mt-2">
+                <span class="badge badge-success">ปฏิบัติงาน</span>
+                <span class="text-muted text-xs">รายเดือน</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn btn-sm">แก้ไข</button>
+              <button type="button" class="btn btn-sm btn-danger">เลิกจ้าง</button>
+            </div>
+          </div>
+
+          <div class="card card-overflow">
+            <div class="tabs">
+              <button type="button" class="tab active">ข้อมูลส่วนตัว</button>
+              <button type="button" class="tab">การทำงาน</button>
+              <button type="button" class="tab">การเงิน</button>
+            </div>
+            <div class="card-body">
+              <div class="grid-2">
+                <div>
+                  <div class="text-muted text-xs">รหัส</div>
+                  <div class="font-medium">EMP001</div>
+                </div>
+                <div>
+                  <div class="text-muted text-xs">เลขบัตร ปชช.</div>
+                  <div class="font-medium">1-2345-67890-12-3</div>
+                </div>
+                <div>
+                  <div class="text-muted text-xs">โทรศัพท์</div>
+                  <div class="font-medium">081-234-5678</div>
+                </div>
+                <div>
+                  <div class="text-muted text-xs">อีเมล</div>
+                  <div class="font-medium">somchai@example.com</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById("previewDarkMode");
+        if (!el) return;
+        function s() {
+          document.documentElement.classList.toggle("dark", el.checked);
+        }
+        el.addEventListener("change", s);
+        s();
+      })();
+    </script>
+  </body>
+</html>

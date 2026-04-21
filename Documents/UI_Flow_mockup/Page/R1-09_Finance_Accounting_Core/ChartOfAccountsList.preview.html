@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance — ผังบัญชี — Preview</title>
+    <link rel="stylesheet" href="../_Shared/preview-base.css" />
+  </head>
+  <body>
+    <div class="preview-banner">
+      <span><strong>Static preview</strong> — ChartOfAccountsListPage</span>
+      <div class="flex-row" style="gap: 0.75rem; align-items: center; flex-wrap: wrap">
+        <label class="preview-toggle"><input type="checkbox" id="toggleLoading" /> Loading</label>
+        <label class="preview-toggle"><input type="checkbox" id="toggleEmpty" /> Empty</label>
+        <label class="preview-toggle"><input type="checkbox" id="previewDarkMode" /> Dark mode</label>
+      </div>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">💼</div>
+          <div>
+            <div class="sidebar-brand-title">ERP System</div>
+            <div class="sidebar-brand-sub">SME Edition</div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">การเงิน</div>
+          <a class="nav-link active" href="#">ผังบัญชี</a>
+          <a class="nav-link" href="#">รายวัน</a>
+        </nav>
+      </aside>
+      <div class="col-main">
+        <header class="header-bar">
+          <span class="header-title">ผังบัญชี</span>
+          <div class="header-actions">
+            <div class="avatar">A</div>
+          </div>
+        </header>
+        <main class="main-content stack-y-6">
+          <div class="page-header">
+            <h1 class="m-0">ผังบัญชี (COA)</h1>
+            <button type="button" class="btn btn-primary btn-sm">เพิ่มบัญชี</button>
+          </div>
+
+          <div class="card card-pad flex-row filter-toolbar--tight">
+            <input class="input input-max-w-xs" placeholder="ค้นหารหัส / ชื่อ" />
+            <select class="text-input select-auto">
+              <option>ทุกประเภท</option>
+              <option>สินทรัพย์</option>
+              <option>หนี้สิน</option>
+              <option>ทุน</option>
+              <option>รายได้</option>
+              <option>ค่าใช้จ่าย</option>
+            </select>
+            <select class="text-input select-auto">
+              <option>ทุกสถานะ</option>
+              <option>ใช้งาน</option>
+              <option>ปิดใช้งาน</option>
+            </select>
+          </div>
+
+          <div id="loadingBlock" class="card card-pad" hidden>
+            <div class="skeleton-stack">
+              <div class="skeleton-line skeleton-line--lg"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+          </div>
+
+          <div id="emptyBlock" class="card card-pad text-muted" hidden>ไม่พบบัญชีตามตัวกรอง</div>
+
+          <div id="tableBlock" class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>รหัส</th>
+                  <th>ชื่อบัญชี</th>
+                  <th>ประเภท</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-mono">1-1000</td>
+                  <td>เงินสด</td>
+                  <td>สินทรัพย์</td>
+                  <td><span class="badge badge-success">active</span></td>
+                  <td><button type="button" class="btn btn-sm">แก้ไข</button></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">4-4100</td>
+                  <td>รายได้จากการขาย</td>
+                  <td>รายได้</td>
+                  <td><span class="badge badge-success">active</span></td>
+                  <td><button type="button" class="btn btn-sm">แก้ไข</button></td>
+                </tr>
+                <tr>
+                  <td class="text-mono">5-5100</td>
+                  <td>ค่าใช้จ่ายในการขาย</td>
+                  <td>ค่าใช้จ่าย</td>
+                  <td><span class="badge badge-outline">inactive</span></td>
+                  <td><button type="button" class="btn btn-sm">แก้ไข</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var dark = document.getElementById("previewDarkMode");
+        var load = document.getElementById("toggleLoading");
+        var empty = document.getElementById("toggleEmpty");
+        var lb = document.getElementById("loadingBlock");
+        var eb = document.getElementById("emptyBlock");
+        var tb = document.getElementById("tableBlock");
+        function syncDark() {
+          if (dark) document.documentElement.classList.toggle("dark", dark.checked);
+        }
+        function syncContent() {
+          var loading = load && load.checked;
+          var emp = empty && empty.checked;
+          if (lb) lb.hidden = !loading;
+          if (tb) tb.hidden = loading || emp;
+          if (eb) eb.hidden = !emp || loading;
+        }
+        if (dark) {
+          dark.addEventListener("change", syncDark);
+          syncDark();
+        }
+        [load, empty].forEach(function (el) {
+          if (el) el.addEventListener("change", syncContent);
+        });
+        syncContent();
+      })();
+    </script>
+  </body>
+</html>
