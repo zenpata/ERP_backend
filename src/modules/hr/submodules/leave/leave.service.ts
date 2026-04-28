@@ -115,7 +115,8 @@ export const LeaveService = {
         daysCount: leaveRequests.daysCount,
         status: leaveRequests.status,
         reason: leaveRequests.reason,
-        rejectionReason: leaveRequests.rejectionReason,
+        // legacy schema has no rejection_reason column
+        rejectionReason: sql<string | null>`NULL`,
         createdAt: leaveRequests.createdAt,
       })
       .from(leaveRequests)
@@ -195,7 +196,6 @@ export const LeaveService = {
         endDate: body.endDate,
         daysCount,
         reason: body.reason ?? null,
-        documentUrl: body.documentUrl ?? null,
         status: 'pending',
       })
       .returning()
@@ -262,7 +262,6 @@ export const LeaveService = {
         status: 'rejected',
         approverId: approverEmpId ?? null,
         approvedAt: new Date(),
-        rejectionReason: reason,
         updatedAt: new Date(),
       })
       .where(eq(leaveRequests.id, id))

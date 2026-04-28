@@ -57,6 +57,34 @@
       "when": 1745100000000,
       "tag": "0007_bank_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1745200000000,
+      "tag": "0008_tax_hub",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1745300000000,
+      "tag": "0009_attendance",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1745400000000,
+      "tag": "0010_company_fiscal_notifications_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1745500000000,
+      "tag": "0011_auth_login_security",
+      "breakpoints": true
     }
   ]
 }

@@ -73,7 +73,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.employeeId],
     references: [employees.id],
   }),
-  userRoles: many(userRoles),
+  userRoles: many(userRoles, { relationName: 'userRoleUser' }),
   // payroll runs ที่ approve / สร้าง
   approvedPayrollRuns: many(payrollRuns, { relationName: 'payrollApprover' }),
   createdPayrollRuns: many(payrollRuns, { relationName: 'payrollCreator' }),
@@ -107,6 +107,7 @@ export const userRolesRelations = relations(userRoles, ({ one }) => ({
   user: one(users, {
     fields: [userRoles.userId],
     references: [users.id],
+    relationName: 'userRoleUser',
   }),
   role: one(roles, {
     fields: [userRoles.roleId],

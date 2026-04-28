@@ -226,15 +226,14 @@ export const leaveRequests = pgTable('leave_requests', {
   leaveTypeId: uuid('leave_type_id').notNull().references(() => leaveTypes.id),
   startDate: date('start_date').notNull(),
   endDate: date('end_date').notNull(),
-  daysCount: numeric('days_count', { precision: 5, scale: 1 }).notNull(),
+  // Legacy DB column name is "days" (not "days_count")
+  daysCount: numeric('days', { precision: 5, scale: 1 }).notNull(),
   reason: text('reason'),
   // status: pending | approved | rejected | cancelled
   status: varchar('status', { length: 20 }).notNull().default('pending'),
-  approverId: uuid('approver_id').references(() => employees.id),
+  // Legacy DB column name is "approved_by" (not "approver_id")
+  approverId: uuid('approved_by').references(() => employees.id),
   approvedAt: timestamp('approved_at'),
-  rejectionReason: text('rejection_reason'),
-  documentUrl: varchar('document_url', { length: 500 }),
-  isAutoApproved: boolean('is_auto_approved').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
