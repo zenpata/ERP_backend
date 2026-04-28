@@ -25,7 +25,10 @@ const GOOD = 'password123'
 test.describe.configure({ mode: 'parallel' })
 
 /** เทสต์ที่ตรงกับ `Documents/scenarios/SCN-01_Auth.md` ใส่ `{ tag: '@e2e_scenario' }` — รันเฉพาะ: `npm run test:scenario` หรือ `playwright test --grep @e2e_scenario` */
-test.describe('R1-01 — 21 test cases + SCN-01 flows (Documents/Testcase/R1-01_testcases.md)', () => {
+test.describe(
+  'R1-01 — 21 test cases + SCN-01 flows (Documents/Testcase/R1-01_testcases.md)',
+  { tag: '@testcase_mock' },
+  () => {
   test.beforeEach(async ({ page, cdpScreencast }) => {
     await cdpScreencast.startCdpScreencast(page)
   })
@@ -448,7 +451,8 @@ test.describe('R1-01 — 21 test cases + SCN-01 flows (Documents/Testcase/R1-01_
       timeout: 15_000,
     })
   })
-})
+  },
+)
 
 test.describe('R1-01 — optional real API (E2E_RUN_LOGIN)', () => {
   test.beforeEach(async ({ page, cdpScreencast }) => {

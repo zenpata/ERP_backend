@@ -20,6 +20,7 @@
 - [x] [SCN-08: Finance Accounts Payable (บัญชีเจ้าหนี้)](SCN-08_Finance_AP.md)
 - [x] [SCN-09: Finance Accounting Core (บัญชีแกนกลาง / Journal)](SCN-09_Finance_Accounting.md)
 - [x] [SCN-10: Finance Reports (รายงานสรุปการเงิน)](SCN-10_Finance_Reports.md)
+- [x] [SCN-17: Finance Real User Journeys (use cases จริง + gap review)](SCN-17_Finance_Real_User_Journeys.md)
 
 ### Project Management Module
 - [x] [SCN-11: PM Budget Management (งบประมาณ)](SCN-11_PM_Budget.md)
@@ -39,10 +40,10 @@
 |--------|----------|-------|
 | Auth | 1 | ✅ Done |
 | HR | 4 | ✅ Done |
-| Finance | 5 | ✅ Done |
+| Finance | 6 | ✅ Done |
 | PM | 4 | ✅ Done |
 | Settings | 2 | ✅ Done |
-| **รวม** | **16** | **✅ Done** |
+| **รวม** | **17** | **✅ Done** |
 
 ---
 

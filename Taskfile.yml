@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+vars:
+  BACKEND_PORT: '3000'
+  FRONTEND_PORT: '5173'
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  start:backend:
+    desc: Start ERP backend (Bun) — http://localhost:{{.BACKEND_PORT}}
+    dir: erp_backend
+    cmds:
+      - bun run dev
+    interactive: true
+
+  start:frontend:
+    desc: Start ERP frontend (Vite) — http://localhost:{{.FRONTEND_PORT}}
+    dir: erp_frontend
+    cmds:
+      - bun run dev
+    interactive: true
+
+  start:
+    aliases: [start:all]
+    desc: Start backend and frontend together (parallel)
+    deps:
+      - task: start:backend
+        parallel: true
+      - task: start:frontend
+        parallel: true
+
+  stop:
+    desc: Stop listeners on ports {{.BACKEND_PORT}} (backend) and {{.FRONTEND_PORT}} (frontend)
+    cmds:
+      - |
+        # Note: always expand PIDs to separate args (tr / xargs). Unquoted $pids with newlines
+        # is not word-split in zsh, so "kill -15 $pids" can fail with multiple listeners.
+        stop_port() {
+          port="$1"
+          label="$2"
+          pids=$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | sort -u)
+          if [ -z "$pids" ]; then
+            echo "Nothing listening on port $port ($label)"
+            return 0
+          fi
+          listed="$(echo "$pids" | tr '\n' ' ')"
+          lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | sort -u | xargs -n 1 kill -15 2>/dev/null || true
+          sleep 0.3
+          if lsof -nP -tiTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+            lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | sort -u | xargs -n 1 kill -9 2>/dev/null || true
+            sleep 0.2
+          fi
+          if lsof -nP -tiTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+            echo "Could not stop port $port ($label) — try: lsof -nP -iTCP:$port -sTCP:LISTEN"
+            return 1
+          fi
+          echo "Stopped port $port ($label): $listed"
+        }
+        stop_port {{.BACKEND_PORT}} backend
+        stop_port {{.FRONTEND_PORT}} frontend
+
+  # Reuse stop script: dummy unused ports so only one service is targeted.
+  stop:backend:
+    desc: Stop only backend (port {{.BACKEND_PORT}})
+    cmds:
+      - task: stop
+        vars:
+          FRONTEND_PORT: '99999'
+          BACKEND_PORT: '{{.BACKEND_PORT}}'
+
+  stop:frontend:
+    desc: Stop only frontend (port {{.FRONTEND_PORT}})
+    cmds:
+      - task: stop
+        vars:
+          BACKEND_PORT: '99998'
+          FRONTEND_PORT: '{{.FRONTEND_PORT}}'

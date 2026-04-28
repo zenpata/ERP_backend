@@ -33,7 +33,10 @@ async function loginAs(page: import('@playwright/test').Page, me: typeof MOCK_HR
   await expect(page).not.toHaveURL(/\/login/, { timeout: 20_000 })
 }
 
-test.describe('R1-02 — 21 test cases (Documents/Testcase/R1-02_testcases.md)', () => {
+test.describe(
+  'R1-02 — 21 test cases (Documents/Testcase/R1-02_testcases.md)',
+  { tag: '@testcase_mock' },
+  () => {
   test.beforeEach(async ({ page, cdpScreencast }) => {
     await cdpScreencast.startCdpScreencast(page)
   })
@@ -426,4 +429,5 @@ test.describe('R1-02 — 21 test cases (Documents/Testcase/R1-02_testcases.md)',
     await page.goto('/hr/employees')
     await expect(page.getByText('คุณไม่มีสิทธิ์ดูรายชื่อพนักงาน')).toBeVisible({ timeout: 15_000 })
   })
-})
+  },
+)
