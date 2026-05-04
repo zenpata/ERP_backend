@@ -1,5 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { requireAnyPermission } from '../../../../shared/middleware/rbac.middleware'
+import { ValidationError } from '../../../../shared/middleware/error.middleware'
 import { ReportsService } from './reports.service'
 
 export const reportsRoutes = new Elysia({ prefix: '/reports' })
@@ -51,6 +52,13 @@ export const reportsRoutes = new Elysia({ prefix: '/reports' })
       .get(
         '/profit-loss',
         async ({ query }) => {
+          if (query.dateFrom > query.dateTo) {
+            throw new ValidationError(
+              { dateFrom: ['dateFrom must be before or equal to dateTo'] },
+              'Invalid date range',
+              { statusCode: 422 }
+            )
+          }
           const data = await ReportsService.profitLoss({
             dateFrom: query.dateFrom,
             dateTo: query.dateTo,
@@ -77,6 +85,28 @@ export const reportsRoutes = new Elysia({ prefix: '/reports' })
         {
           query: t.Object({
             asOf: t.String({ format: 'date' }),
+          }),
+        }
+      )
+  )
+  .use(
+    new Elysia()
+      .use(requireAnyPermission('finance:report:view'))
+      .get(
+        '/budget-vs-actual',
+        async ({ query }) => {
+          const data = await ReportsService.budgetVsActual({
+            projectId: query.projectId,
+            dateFrom: query.dateFrom,
+            dateTo: query.dateTo,
+          })
+          return { success: true, data }
+        },
+        {
+          query: t.Object({
+            projectId: t.String({ format: 'uuid' }),
+            dateFrom: t.String({ format: 'date' }),
+            dateTo: t.String({ format: 'date' }),
           }),
         }
       )

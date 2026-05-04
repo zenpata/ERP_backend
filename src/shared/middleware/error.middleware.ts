@@ -72,7 +72,33 @@ export class ForbiddenError extends AppError {
 }
 
 export const errorMiddleware = new Elysia({ name: 'error-middleware' }).onError(
-  ({ error, set }) => {
+  { as: 'global' },
+  ({ code, error, set }) => {
+    if (code === 'NOT_FOUND') {
+      set.status = 404
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'ไม่พบ endpoint ที่ระบุ' },
+      }
+    }
+    if (code === 'VALIDATION') {
+      set.status = 422
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'ข้อมูลไม่ถูกต้อง',
+          ...(error instanceof Error ? { detail: error.message } : {}),
+        },
+      }
+    }
+    if (code === 'PARSE') {
+      set.status = 400
+      return {
+        success: false,
+        error: { code: 'PARSE_ERROR', message: 'ไม่สามารถ parse request ได้' },
+      }
+    }
     if (error instanceof AppError) {
       set.status = error.statusCode
       const fields = error.fields ?? detailsToFields(error.details)
@@ -95,6 +121,27 @@ export const errorMiddleware = new Elysia({ name: 'error-middleware' }).onError(
         error: {
           code: 'VALIDATION_ERROR',
           message: 'ข้อมูลไม่ถูกต้อง',
+        },
+      }
+    }
+
+    // Postgres invalid_text_representation (e.g. malformed UUID in path param).
+    // Drizzle wraps in DrizzleQueryError; the postgres error sits on .cause.
+    // Treat as a client error rather than a 500.
+    const errObj = (error ?? {}) as { code?: string; cause?: { code?: string; message?: string } }
+    const pgCode = errObj.code ?? errObj.cause?.code
+    const causeMsg = errObj.cause?.message ?? ''
+    if (
+      pgCode === '22P02' ||
+      /invalid input syntax for type uuid/i.test(errMsg) ||
+      /invalid input syntax for type uuid/i.test(causeMsg)
+    ) {
+      set.status = 400
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_PARAMETER',
+          message: 'รูปแบบ parameter ไม่ถูกต้อง',
         },
       }
     }
