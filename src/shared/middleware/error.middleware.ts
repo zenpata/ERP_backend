@@ -115,7 +115,7 @@ export const errorMiddleware = new Elysia({ name: 'error-middleware' }).onError(
 
     const errMsg = error instanceof Error ? error.message : String(error)
     if (errMsg.includes('Validation')) {
-      set.status = 400
+      set.status = 422
       return {
         success: false,
         error: {
