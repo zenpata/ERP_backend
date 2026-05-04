@@ -3,7 +3,7 @@ import Decimal from 'decimal.js'
 import { db } from '../../../../shared/db/client'
 import { ValidationError } from '../../../../shared/middleware/error.middleware'
 import { apBills, chartOfAccounts, customers, invoices, journalEntries, journalLines } from '../../finance.schema'
-import { pmExpenses } from '../../../pm/pm.schema'
+import { pmExpenses, pmBudgets } from '../../../pm/pm.schema'
 
 export type FinanceSummaryApi = {
   totalAr: number
@@ -69,6 +69,30 @@ function plAmountForType(accountType: string, debit: Decimal, credit: Decimal): 
   if (t === 'revenue' || t === 'income') return credit.minus(debit)
   if (t === 'expense' || t === 'cost') return debit.minus(credit)
   return new Decimal(0)
+}
+
+export type BudgetVsActualLine = {
+  accountCode: string
+  accountName: string
+  budget: string
+  actual: string
+  variance: string
+  variancePercent: string
+  committed: string
+}
+
+export type BudgetVsActualApi = {
+  projectId: string
+  projectName: string
+  period: { dateFrom: string; dateTo: string }
+  lines: BudgetVsActualLine[]
+  totals: {
+    totalBudget: string
+    totalActual: string
+    totalVariance: string
+    variancePercent: string
+    totalCommitted: string
+  }
 }
 
 export const ReportsService = {
@@ -376,6 +400,185 @@ export const ReportsService = {
         totalAssets: totalAssets.toNumber(),
         totalLiabilities: totalLiabilities.toNumber(),
         totalEquity: totalEquity.toNumber(),
+      },
+    }
+  },
+
+  async budgetVsActual(query: {
+    projectId: string
+    dateFrom: string
+    dateTo: string
+  }): Promise<BudgetVsActualApi> {
+    const from = new Date(query.dateFrom)
+    const toEnd = new Date(query.dateTo + 'T23:59:59')
+    if (Number.isNaN(from.getTime()) || Number.isNaN(toEnd.getTime())) {
+      throw new ValidationError({ dateFrom: ['Invalid date range'] })
+    }
+    if (from > toEnd) throw new ValidationError({ dateFrom: ['dateFrom must be <= dateTo'] })
+
+    // Get project budget
+    const budgetRow = await db.query.pmBudgets.findFirst({
+      where: eq(pmBudgets.id, query.projectId),
+    })
+
+    if (!budgetRow) {
+      throw new ValidationError({ projectId: ['Project not found'] })
+    }
+
+    // Get actual expenses from GL journal entries
+    const expenseRows = await db
+      .select({
+        debit: journalLines.debit,
+        credit: journalLines.credit,
+        accType: chartOfAccounts.type,
+        accCode: chartOfAccounts.code,
+        accName: chartOfAccounts.name,
+        accId: chartOfAccounts.id,
+        projectBudgetId: journalLines.projectBudgetId,
+      })
+      .from(journalLines)
+      .innerJoin(journalEntries, eq(journalLines.entryId, journalEntries.id))
+      .innerJoin(chartOfAccounts, eq(journalLines.accountId, chartOfAccounts.id))
+      .where(
+        and(
+          eq(journalLines.projectBudgetId, query.projectId),
+          gte(journalEntries.date, from),
+          lte(journalEntries.date, toEnd),
+        ),
+      )
+
+    type AccAgg = {
+      code: string
+      name: string
+      type: string
+      amount: Decimal
+      accId: string
+    }
+    const byAccount = new Map<string, AccAgg>()
+    for (const r of expenseRows) {
+      const id = r.accId
+      const delta = plAmountForType(r.accType, new Decimal(r.debit), new Decimal(r.credit))
+      if (delta.eq(0)) continue
+      let a = byAccount.get(id)
+      if (!a) {
+        a = {
+          code: r.accCode,
+          name: r.accName,
+          type: r.accType,
+          amount: new Decimal(0),
+          accId: id,
+        }
+        byAccount.set(id, a)
+      }
+      a.amount = a.amount.plus(delta)
+    }
+
+    // Get committed expenses (approved but not yet posted)
+    const fromStr = from.toISOString().split('T')[0] ?? from.toISOString()
+    const toEndStr = toEnd.toISOString().split('T')[0] ?? toEnd.toISOString()
+    const committedRows = await db
+      .select({
+        amount: pmExpenses.amount,
+        accType: chartOfAccounts.type,
+        accCode: chartOfAccounts.code,
+        accName: chartOfAccounts.name,
+        accId: chartOfAccounts.id,
+      })
+      .from(pmExpenses)
+      .innerJoin(pmBudgets, eq(pmExpenses.budgetId, pmBudgets.id))
+      .leftJoin(chartOfAccounts, eq(pmExpenses.expenseAccountId, chartOfAccounts.id))
+      .where(
+        and(
+          eq(pmExpenses.budgetId, query.projectId),
+          inArray(pmExpenses.status, ['Approved']),
+          gte(pmExpenses.expenseDate, fromStr),
+          lte(pmExpenses.expenseDate, toEndStr),
+        ),
+      )
+
+    type CommittedAgg = {
+      code: string
+      name: string
+      amount: Decimal
+      accId: string
+    }
+    const byAccountCommitted = new Map<string, CommittedAgg>()
+    for (const r of committedRows) {
+      if (!r.accId) continue
+      const id = r.accId
+      const existing = byAccountCommitted.get(id)
+      const a: CommittedAgg = existing ?? {
+        code: r.accCode ?? '',
+        name: r.accName ?? '',
+        amount: new Decimal(0),
+        accId: id,
+      }
+      if (!existing) byAccountCommitted.set(id, a)
+      a.amount = a.amount.plus(new Decimal(r.amount))
+    }
+
+    // Build budget allocation by account (simplified: distribute total budget across expense accounts)
+    const budgetAmount = new Decimal(budgetRow.totalAmount)
+    const totalActual = Array.from(byAccount.values()).reduce(
+      (sum, a) => sum.plus(a.type.toLowerCase() === 'expense' ? a.amount : new Decimal(0)),
+      new Decimal(0),
+    )
+
+    const lines: BudgetVsActualLine[] = []
+    let aggTotalBudget = new Decimal(0)
+    let aggTotalActual = new Decimal(0)
+    let aggTotalCommitted = new Decimal(0)
+
+    for (const a of byAccount.values()) {
+      const t = a.type.toLowerCase()
+      if (t !== 'expense' && t !== 'cost') continue
+
+      const actualAmount = a.amount
+      const committedAmount = byAccountCommitted.get(a.accId)?.amount ?? new Decimal(0)
+
+      // Allocate budget proportionally based on actual spend
+      const budgetAlloc = totalActual.gt(0)
+        ? budgetAmount.mul(actualAmount).div(totalActual)
+        : new Decimal(0)
+
+      const variance = budgetAlloc.minus(actualAmount)
+      const variancePercent = budgetAlloc.gt(0)
+        ? variance.div(budgetAlloc).mul(100)
+        : new Decimal(0)
+
+      aggTotalBudget = aggTotalBudget.plus(budgetAlloc)
+      aggTotalActual = aggTotalActual.plus(actualAmount)
+      aggTotalCommitted = aggTotalCommitted.plus(committedAmount)
+
+      lines.push({
+        accountCode: a.code,
+        accountName: a.name,
+        budget: budgetAlloc.toFixed(2),
+        actual: actualAmount.toFixed(2),
+        variance: variance.toFixed(2),
+        variancePercent: variancePercent.toFixed(2),
+        committed: committedAmount.toFixed(2),
+      })
+    }
+
+    lines.sort((x, y) => x.accountCode.localeCompare(y.accountCode))
+
+    const totalVariance = aggTotalBudget.minus(aggTotalActual)
+    const totalVariancePercent = aggTotalBudget.gt(0)
+      ? totalVariance.div(aggTotalBudget).mul(100)
+      : new Decimal(0)
+
+    return {
+      projectId: query.projectId,
+      projectName: budgetRow.projectName,
+      period: { dateFrom: query.dateFrom, dateTo: query.dateTo },
+      lines,
+      totals: {
+        totalBudget: aggTotalBudget.toFixed(2),
+        totalActual: aggTotalActual.toFixed(2),
+        totalVariance: totalVariance.toFixed(2),
+        variancePercent: totalVariancePercent.toFixed(2),
+        totalCommitted: aggTotalCommitted.toFixed(2),
       },
     }
   },

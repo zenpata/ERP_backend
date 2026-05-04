@@ -2,6 +2,7 @@ import {
   boolean,
   date,
   integer,
+  jsonb,
   numeric,
   pgTable,
   text,
@@ -121,6 +122,10 @@ export const invoices = pgTable('invoices', {
   invoiceNumber: varchar('invoice_number', { length: 20 }).notNull().unique(),
   customerId: uuid('customer_id').notNull().references(() => customers.id),
   salesOrderId: uuid('sales_order_id').references(() => salesOrders.id),
+  /** R3-02: manual | recurring */
+  source: varchar('source', { length: 20 }).notNull().default('manual'),
+  /** R3-02: FK to recurring template that generated this invoice */
+  recurringTemplateId: uuid('recurring_template_id'),
   issueDate: timestamp('issue_date').notNull(),
   dueDate: timestamp('due_date').notNull(),
   subtotal: numeric('subtotal', { precision: 15, scale: 2 }).notNull(),
@@ -137,6 +142,8 @@ export const invoices = pgTable('invoices', {
 export const invoiceItems = pgTable('invoice_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   invoiceId: uuid('invoice_id').notNull().references(() => invoices.id),
+  /** R3-05: optional product link for inventory tracking */
+  productId: uuid('product_id'),
   description: varchar('description', { length: 500 }).notNull(),
   quantity: numeric('quantity', { precision: 15, scale: 4 }).notNull(),
   unitPrice: numeric('unit_price', { precision: 15, scale: 2 }).notNull(),
@@ -174,11 +181,21 @@ export const journalEntries = pgTable('journal_entries', {
   id: uuid('id').primaryKey().defaultRandom(),
   entryNumber: varchar('entry_number', { length: 20 }).notNull().unique(),
   type: varchar('type', { length: 30 }).notNull().default('manual'),
+  /** R3-01: draft | pending_review | posted | reversed */
+  status: varchar('status', { length: 20 }).notNull().default('draft'),
+  /** R3-01: manual | invoice | ap | payroll | inventory | depreciation | disposal */
+  source: varchar('source', { length: 30 }).notNull().default('manual'),
   date: timestamp('date').notNull(),
   description: varchar('description', { length: 500 }).notNull(),
   referenceId: uuid('reference_id'),
+  referenceNo: varchar('reference_no', { length: 100 }),
   totalDebit: numeric('total_debit', { precision: 15, scale: 2 }).notNull(),
   totalCredit: numeric('total_credit', { precision: 15, scale: 2 }).notNull(),
+  /** R3-01: UUID of the reversal journal (set on original after reversal) */
+  reversedById: uuid('reversed_by_id'),
+  postedAt: timestamp('posted_at'),
+  postedBy: uuid('posted_by').references(() => users.id),
+  createdBy: uuid('created_by').references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
@@ -189,6 +206,8 @@ export const journalLines = pgTable('journal_lines', {
   debit: numeric('debit', { precision: 15, scale: 2 }).notNull().default('0'),
   credit: numeric('credit', { precision: 15, scale: 2 }).notNull().default('0'),
   description: varchar('description', { length: 300 }),
+  /** Optional link to a PM project budget for budget-vs-actual reporting */
+  projectBudgetId: uuid('project_budget_id'),
 })
 
 /** R2-3.5 — Operating bank accounts (cash/bank) */
@@ -364,4 +383,191 @@ export const whtCertificates = pgTable('wht_certificates', {
     .notNull()
     .references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// ============================================================
+// R3-08 — Accounting Period Lock
+// ============================================================
+
+export const accountingPeriods = pgTable('accounting_periods', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  /** YYYY-MM format */
+  period: varchar('period', { length: 7 }).notNull().unique(),
+  /** open | locked */
+  status: varchar('status', { length: 10 }).notNull().default('open'),
+  lockedBy: uuid('locked_by').references(() => users.id),
+  lockedAt: timestamp('locked_at'),
+  unlockedBy: uuid('unlocked_by').references(() => users.id),
+  unlockReason: text('unlock_reason'),
+  unlockedAt: timestamp('unlocked_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// ============================================================
+// R3-02 — Recurring Invoice Templates
+// ============================================================
+
+export const recurringInvoiceTemplates = pgTable('recurring_invoice_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  customerId: uuid('customer_id').notNull().references(() => customers.id),
+  name: varchar('name', { length: 200 }).notNull(),
+  /** monthly | quarterly | annually | custom */
+  frequency: varchar('frequency', { length: 20 }).notNull(),
+  customDays: integer('custom_days'),
+  startDate: date('start_date', { mode: 'string' }).notNull(),
+  endDate: date('end_date', { mode: 'string' }),
+  maxOccurrences: integer('max_occurrences'),
+  nextRunDate: date('next_run_date', { mode: 'string' }).notNull(),
+  /** Snapshot of invoice items stored as JSONB */
+  items: jsonb('items').notNull(),
+  /** active | paused | completed | cancelled */
+  status: varchar('status', { length: 20 }).notNull().default('active'),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  notes: text('notes'),
+  deletedAt: timestamp('deleted_at'),
+})
+
+export const recurringInvoiceRuns = pgTable('recurring_invoice_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  templateId: uuid('template_id').notNull().references(() => recurringInvoiceTemplates.id),
+  invoiceId: uuid('invoice_id').references(() => invoices.id),
+  scheduledDate: date('scheduled_date', { mode: 'string' }),
+  generatedAt: timestamp('generated_at'),
+  /** pending | generated | skipped | failed */
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// ============================================================
+// R3-03 — Collection Workflow (AR Follow-up)
+// ============================================================
+
+export const invoiceCollectionNotes = pgTable('invoice_collection_notes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  invoiceId: uuid('invoice_id').notNull().references(() => invoices.id),
+  /** call | email | meeting | system | other */
+  type: varchar('type', { length: 20 }).notNull(),
+  notes: text('notes').notNull(),
+  promisedPayDate: date('promised_pay_date', { mode: 'string' }),
+  promisedAmount: numeric('promised_amount', { precision: 15, scale: 2 }),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// ============================================================
+// R3-04 — Bank Statement Import + Auto-match
+// ============================================================
+
+export const bankStatementImports = pgTable('bank_statement_imports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  bankAccountId: uuid('bank_account_id').notNull().references(() => bankAccounts.id),
+  fileName: varchar('file_name', { length: 300 }),
+  periodFrom: date('period_from', { mode: 'string' }).notNull(),
+  periodTo: date('period_to', { mode: 'string' }).notNull(),
+  totalLines: integer('total_lines').notNull().default(0),
+  matchedLines: integer('matched_lines').notNull().default(0),
+  /** pending | reviewed | completed */
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  importedBy: uuid('imported_by').references(() => users.id),
+  importedAt: timestamp('imported_at').notNull().defaultNow(),
+})
+
+export const bankStatementLines = pgTable('bank_statement_lines', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  importId: uuid('import_id').notNull().references(() => bankStatementImports.id, { onDelete: 'cascade' }),
+  txDate: date('tx_date', { mode: 'string' }).notNull(),
+  description: varchar('description', { length: 500 }),
+  amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
+  referenceNo: varchar('reference_no', { length: 200 }),
+  balance: numeric('balance', { precision: 15, scale: 2 }),
+  /** exact | probable | unmatched | manual | confirmed */
+  matchStatus: varchar('match_status', { length: 20 }).notNull().default('unmatched'),
+  matchedTxId: uuid('matched_tx_id'),
+  /** ar_payment | ap_payment | manual_tx */
+  matchedTxType: varchar('matched_tx_type', { length: 30 }),
+  confirmedBy: uuid('confirmed_by').references(() => users.id),
+  confirmedAt: timestamp('confirmed_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// ============================================================
+// R3-05 — Inventory / Stock Management
+// ============================================================
+
+export const products = pgTable('products', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sku: varchar('sku', { length: 100 }).notNull().unique(),
+  name: varchar('name', { length: 300 }).notNull(),
+  unit: varchar('unit', { length: 40 }).notNull().default('pcs'),
+  costPrice: numeric('cost_price', { precision: 15, scale: 2 }).notNull().default('0'),
+  sellingPrice: numeric('selling_price', { precision: 15, scale: 2 }).notNull().default('0'),
+  reorderPoint: numeric('reorder_point', { precision: 10, scale: 2 }).notNull().default('0'),
+  /** GL accounts for COGS, inventory asset, revenue */
+  cogsAccountId: uuid('cogs_account_id').references(() => chartOfAccounts.id),
+  inventoryAccountId: uuid('inventory_account_id').references(() => chartOfAccounts.id),
+  revenueAccountId: uuid('revenue_account_id').references(() => chartOfAccounts.id),
+  /** false for service products — skip stock movements */
+  trackInventory: boolean('track_inventory').notNull().default(true),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export const stockMovements = pgTable('stock_movements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  /** IN | OUT | ADJUSTMENT */
+  movementType: varchar('movement_type', { length: 20 }).notNull(),
+  quantity: numeric('quantity', { precision: 10, scale: 4 }).notNull(),
+  unitCost: numeric('unit_cost', { precision: 15, scale: 2 }).notNull().default('0'),
+  totalCost: numeric('total_cost', { precision: 15, scale: 2 }).notNull().default('0'),
+  /** goods_receipt | invoice | manual */
+  referenceType: varchar('reference_type', { length: 40 }),
+  referenceId: uuid('reference_id'),
+  notes: text('notes'),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// ============================================================
+// R3-06 — Fixed Assets & Depreciation
+// ============================================================
+
+export const fixedAssets = pgTable('fixed_assets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  assetNo: varchar('asset_no', { length: 40 }).notNull().unique(),
+  name: varchar('name', { length: 300 }).notNull(),
+  category: varchar('category', { length: 100 }),
+  acquisitionDate: date('acquisition_date', { mode: 'string' }).notNull(),
+  acquisitionCost: numeric('acquisition_cost', { precision: 15, scale: 2 }).notNull(),
+  salvageValue: numeric('salvage_value', { precision: 15, scale: 2 }).notNull().default('0'),
+  usefulLifeMonths: integer('useful_life_months').notNull(),
+  /** straight_line | declining_balance */
+  depreciationMethod: varchar('depreciation_method', { length: 30 }).notNull().default('straight_line'),
+  assetAccountId: uuid('asset_account_id').references(() => chartOfAccounts.id),
+  accumDepAccountId: uuid('accum_dep_account_id').references(() => chartOfAccounts.id),
+  depExpenseAccountId: uuid('dep_expense_account_id').references(() => chartOfAccounts.id),
+  /** active | disposed | fully_depreciated */
+  status: varchar('status', { length: 30 }).notNull().default('active'),
+  disposalDate: date('disposal_date', { mode: 'string' }),
+  disposalProceeds: numeric('disposal_proceeds', { precision: 15, scale: 2 }),
+  notes: text('notes'),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export const assetDepreciationSchedule = pgTable('asset_depreciation_schedule', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  assetId: uuid('asset_id').notNull().references(() => fixedAssets.id, { onDelete: 'cascade' }),
+  /** YYYY-MM-DD (last day of the month for that period) */
+  periodDate: date('period_date', { mode: 'string' }).notNull(),
+  depAmount: numeric('dep_amount', { precision: 15, scale: 2 }).notNull(),
+  accumDep: numeric('accum_dep', { precision: 15, scale: 2 }).notNull(),
+  nbv: numeric('nbv', { precision: 15, scale: 2 }).notNull(),
+  journalId: uuid('journal_id'),
+  /** scheduled | posted | skipped */
+  status: varchar('status', { length: 20 }).notNull().default('scheduled'),
 })

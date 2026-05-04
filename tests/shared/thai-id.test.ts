@@ -4,8 +4,10 @@ import { validateNationalId, formatNationalId } from '../../src/shared/utils/tha
 describe('thai-id utils', () => {
   describe('validateNationalId', () => {
     it('ตรวจสอบเลขที่ถูกต้อง', () => {
-      // เลขสุ่มที่ผ่าน checksum algorithm
-      expect(validateNationalId('1234567890121')).toBe(false) // ตัวอย่าง checksum ไม่ผ่าน
+      // 1234567890121 ผ่าน checksum (sum=352, mod11=0, check=1 = digit 13)
+      expect(validateNationalId('1234567890121')).toBe(true)
+      // เปลี่ยน checksum digit ให้ผิด → ต้อง return false
+      expect(validateNationalId('1234567890120')).toBe(false)
     })
 
     it('ปฏิเสธเลขที่มีตัวอักษร', () => {

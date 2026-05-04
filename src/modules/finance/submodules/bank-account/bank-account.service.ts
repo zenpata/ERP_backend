@@ -158,7 +158,7 @@ export const BankAccountService = {
     glAccountId?: string
   }) {
     const code = (body.code?.trim() || (await nextBankCode())).toUpperCase()
-    if (!/^BA-\d{4}$/.test(code)) {
+    if (!/^[A-Z0-9\-]{1,20}$/.test(code)) {
       throw new ValidationError({ code: ['รูปแบบต้องเป็น BA-0000 หรือเว้นว่างให้ระบบ gen'] })
     }
     const opening = new Decimal(body.openingBalance)

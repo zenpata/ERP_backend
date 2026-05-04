@@ -85,6 +85,13 @@
       "when": 1745500000000,
       "tag": "0011_auth_login_security",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1777564800000,
+      "tag": "0012_r3_features",
+      "breakpoints": true
     }
   ]
 }

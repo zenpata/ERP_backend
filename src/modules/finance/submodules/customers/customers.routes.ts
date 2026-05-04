@@ -11,7 +11,7 @@ const customerBody = t.Object({
   phone: t.Optional(t.String()),
   email: t.Optional(t.String()),
   creditLimit: t.Optional(t.String()),
-  creditTermDays: t.Optional(t.Numeric({ minimum: 0 })),
+  creditTermDays: t.Optional(t.Union([t.Number(), t.String()])),
   notes: t.Optional(t.String()),
 })
 

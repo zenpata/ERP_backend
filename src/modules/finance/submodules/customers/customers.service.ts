@@ -7,7 +7,7 @@ import { customers, invoices } from '../../finance.schema'
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
-const CUSTOMER_CODE_RE = /^C-\d{4}$/
+const CUSTOMER_CODE_RE = /^[A-Z0-9\-]{1,20}$/
 
 function normalizeCustomerCode(code: string): string {
   return code.trim().toUpperCase()
@@ -368,7 +368,13 @@ export const CustomerService = {
         .returning()
 
       if (!row) throw new Error('create customer failed')
-      return this.getById(row.id)
+      return {
+        id: row.id,
+        code: row.code,
+        name: row.name,
+        isActive: row.isActive,
+        createdAt: row.createdAt.toISOString(),
+      }
     })
   },
 

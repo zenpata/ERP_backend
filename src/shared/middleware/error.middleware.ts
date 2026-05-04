@@ -43,7 +43,7 @@ export class ValidationError extends AppError {
   ) {
     const fields = detailsToFields(details)
     const code = options?.code ?? 'VALIDATION_ERROR'
-    const statusCode = options?.statusCode ?? 400
+    const statusCode = options?.statusCode ?? 422
     super(code, message, statusCode, details, fields)
   }
 }

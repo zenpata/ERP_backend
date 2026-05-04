@@ -1141,6 +1141,9 @@ async function seed() {
     'finance:bank_account:activate',
     'finance:tax:view',
     'finance:tax:manage',
+    'finance:asset:view',
+    'finance:asset:create',
+    'finance:asset:edit',
   ]
   const FINANCE_STAFF_KEYS = [
     'finance:invoice:view',
@@ -1167,6 +1170,7 @@ async function seed() {
     'finance:purchase_order:edit',
     'finance:bank_account:view',
     'finance:bank_account:create',
+    'finance:asset:view',
     'finance:bank_account:edit',
     'finance:tax:view',
   ]

@@ -88,6 +88,8 @@ export const pmExpenses = pgTable('pm_expenses', {
   approvedByUserId: uuid('approved_by_user_id'),
   note: text('note'),
   receiptUrl: varchar('receipt_url', { length: 500 }),
+  expenseAccountId: uuid('expense_account_id'),
+  accruedExpenseAccountId: uuid('accrued_expense_account_id'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })

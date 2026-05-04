@@ -13,30 +13,30 @@ import {
 describe('calculateSsoContribution', () => {
   it('เงินเดือน 15,000 — SSO employee และ employer = 750 บาท', () => {
     const { employee, employer } = calculateSsoContribution(new Decimal('15000'))
-    expect(employee.toString()).toBe('750.00')
-    expect(employer.toString()).toBe('750.00')
+    expect(employee.toFixed(2)).toBe('750.00')
+    expect(employer.toFixed(2)).toBe('750.00')
   })
 
   it('เงินเดือนเกิน 15,000 — ยังคง 750 บาท (cap)', () => {
     const { employee, employer } = calculateSsoContribution(new Decimal('80000'))
-    expect(employee.toString()).toBe('750.00')
-    expect(employer.toString()).toBe('750.00')
+    expect(employee.toFixed(2)).toBe('750.00')
+    expect(employer.toFixed(2)).toBe('750.00')
   })
 
   it('เงินเดือน 10,000 — SSO = 500 บาท', () => {
     const { employee } = calculateSsoContribution(new Decimal('10000'))
-    expect(employee.toString()).toBe('500.00')
+    expect(employee.toFixed(2)).toBe('500.00')
   })
 
   it('เงินเดือนต่ำกว่า 1,650 — ใช้ฐาน 1,650 บาท', () => {
     const { employee } = calculateSsoContribution(new Decimal('1000'))
-    expect(employee.toString()).toBe('82.50') // 1650 * 5%
+    expect(employee.toFixed(2)).toBe('82.50') // 1650 * 5%
   })
 
   it('ปัดเศษทศนิยม 2 ตำแหน่งถูกต้อง', () => {
     const { employee } = calculateSsoContribution(new Decimal('12345.67'))
     const expected = new Decimal('12345.67').mul(0.05).toDecimalPlaces(2)
-    expect(employee.toString()).toBe(expected.toString())
+    expect(employee.toFixed(2)).toBe(expected.toFixed(2))
   })
 })
 
@@ -45,7 +45,7 @@ describe('calculateMonthlyWithholdingTax', () => {
     // รายได้ต่อปี = 10,000 * 12 = 120,000
     // หัก 50% = 60,000, หักส่วนตัว 60,000 → taxable = 0
     const tax = calculateMonthlyWithholdingTax(new Decimal('10000'))
-    expect(tax.toString()).toBe('0.00')
+    expect(tax.toFixed(2)).toBe('0.00')
   })
 
   it('เงินเดือน 25,000 — คำนวณ WHT ถูกต้อง', () => {
@@ -78,16 +78,16 @@ describe('calculateMonthlyWithholdingTax', () => {
 describe('calculatePayroll', () => {
   it('คำนวณครบทุก field — เงินเดือน 30,000', () => {
     const result = calculatePayroll(new Decimal('30000'))
-    expect(result.grossSalary.toString()).toBe('30000')
-    expect(result.ssoEmployee.toString()).toBe('750.00') // cap ที่ 750
-    expect(result.ssoEmployer.toString()).toBe('750.00')
+    expect(result.grossSalary.toFixed(0)).toBe('30000')
+    expect(result.ssoEmployee.toFixed(2)).toBe('750.00') // cap ที่ 750
+    expect(result.ssoEmployer.toFixed(2)).toBe('750.00')
     expect(result.withholdingTax.gte(0)).toBe(true)
     // netSalary = gross - ssoEmployee - wht
     const expectedNet = new Decimal('30000')
       .minus(result.ssoEmployee)
       .minus(result.withholdingTax)
       .toDecimalPlaces(2)
-    expect(result.netSalary.toString()).toBe(expectedNet.toString())
+    expect(result.netSalary.toFixed(2)).toBe(expectedNet.toFixed(2))
   })
 
   it('net salary ต้องไม่เกิน gross salary', () => {

@@ -6,7 +6,7 @@ import { apBills, vendors } from '../../finance.schema'
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
-const VENDOR_CODE_RE = /^V-\d{4}$/
+const VENDOR_CODE_RE = /^[A-Z0-9\-]{1,20}$/
 
 function normalizeVendorCode(code: string): string {
   return code.trim().toUpperCase()
