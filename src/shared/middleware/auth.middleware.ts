@@ -36,7 +36,7 @@ export const authMiddleware = new Elysia({ name: 'auth-middleware' }).derive(
 
     const token = authHeader.slice(7)
     try {
-      const { payload } = await jwtVerify(token, getSecret())
+      const { payload } = await jwtVerify(token, getSecret(), { algorithms: ['HS256'] })
       const p = payload as JwtAuthPayload
       const userId = (p.sub as string | undefined) ?? ''
       const email = typeof p.email === 'string' ? p.email : ''

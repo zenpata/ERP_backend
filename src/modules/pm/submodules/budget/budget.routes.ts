@@ -1,7 +1,10 @@
 import { Elysia, t } from 'elysia'
+import { requireAnyPermission } from '../../../../shared/middleware/rbac.middleware'
 import { BudgetService } from './budget.service'
 
-export const budgetRoutes = new Elysia({ prefix: '/budgets' }).get(
+export const budgetRoutes = new Elysia({ prefix: '/budgets' })
+  .use(requireAnyPermission('pm:budget:view', 'pm:budget:edit'))
+  .get(
     '/',
     async ({ query }) => {
       const q: Parameters<typeof BudgetService.list>[0] = {}
@@ -32,7 +35,7 @@ export const budgetRoutes = new Elysia({ prefix: '/budgets' }).get(
     {
       body: t.Object({
         projectName: t.String({ minLength: 1 }),
-        totalAmount: t.String(),
+        totalAmount: t.String({ pattern: '^[0-9]+(\\.[0-9]{1,2})?$' }),
         budgetType: t.String(),
         moduleTags: t.Array(t.String()),
         ownerName: t.String(),

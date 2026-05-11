@@ -19,18 +19,20 @@ export function validateNationalId(id: string): boolean {
 /**
  * ตรวจสอบเลขประจำตัวนิติบุคคล 13 หลัก
  * รูปแบบ: X-XXXX-XXXXX-XX-X
+ * ใช้ checksum algorithm เดียวกับ validateNationalId
  */
 export function validateJuristicId(id: string): boolean {
-  // ลบขีดออกก่อน
   const cleaned = id.replace(/-/g, '')
   if (!/^\d{13}$/.test(cleaned)) return false
 
-  // ตัวแรกต้องเป็น 0 (นิติบุคคล) หรือ 1-9 (บุคคลธรรมดา)
   // นิติบุคคลขึ้นต้นด้วย 0
-  const firstDigit = cleaned[0]
-  if (firstDigit !== '0') return false
+  if (cleaned[0] !== '0') return false
 
-  return true
+  // checksum: algorithm เดียวกับเลขประชาชน (กรมพัฒนาธุรกิจการค้าใช้ algorithm เดียวกัน)
+  const digits = cleaned.split('').map(Number)
+  const sum = digits.slice(0, 12).reduce((acc, d, i) => acc + d * (13 - i), 0)
+  const checkDigit = (11 - (sum % 11)) % 10
+  return checkDigit === digits[12]
 }
 
 /**

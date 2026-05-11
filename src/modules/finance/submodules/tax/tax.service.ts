@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, gte, ilike, lt, ne, notInArray, sql } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 import { db } from '../../../../shared/db/client'
-import { AppError, NotFoundError, ValidationError } from '../../../../shared/middleware/error.middleware'
+import { AppError, ConflictError, NotFoundError, ValidationError } from '../../../../shared/middleware/error.middleware'
 import type { PaginatedResult } from '../../../../shared/types/common.types'
 import { apBills, invoices, taxRates, whtCertificates } from '../../finance.schema'
 import { employees } from '../../../hr/hr.schema'
@@ -102,20 +102,25 @@ export const TaxService = {
     pndForm?: string | null
     incomeType?: string | null
   }): Promise<{ id: string }> {
-    if (input.type === 'WHT') {
-      if (!input.pndForm || !input.incomeType) {
-        throw new ValidationError({ body: ['WHT rates require pndForm and incomeType'] })
-      }
+    if (input.rate < 0 || input.rate > 100) {
+      throw new ValidationError({ rate: ['Rate must be between 0 and 100'] })
     }
+    const code = input.code.trim()
+    const [dup] = await db
+      .select({ id: taxRates.id })
+      .from(taxRates)
+      .where(and(eq(taxRates.code, code), eq(taxRates.type, input.type)))
+      .limit(1)
+    if (dup) throw new ConflictError('TAX_RATE_CODE_DUPLICATE', 'Tax rate code already exists', { code: 'Duplicate code' })
     const [row] = await db
       .insert(taxRates)
       .values({
         type: input.type,
-        code: input.code.trim(),
+        code,
         rate: String(input.rate),
         description: input.description.trim(),
-        pndForm: input.type === 'WHT' ? input.pndForm! : null,
-        incomeType: input.type === 'WHT' ? input.incomeType! : null,
+        pndForm: input.pndForm ?? null,
+        incomeType: input.incomeType ?? null,
         isActive: true,
       })
       .returning({ id: taxRates.id })
@@ -137,6 +142,12 @@ export const TaxService = {
     if (existing.type === 'WHT') {
       if (input.pndForm === null || input.incomeType === null) {
         throw new ValidationError({ body: ['WHT rates cannot clear pndForm or incomeType'] })
+      }
+    }
+    if (input.pndForm !== undefined && input.pndForm !== null) {
+      const f = input.pndForm.toUpperCase()
+      if (!['PND1', 'PND3', 'PND53'].includes(f)) {
+        throw new ValidationError({ pndForm: ['pndForm must be PND1, PND3, or PND53'] })
       }
     }
     await db

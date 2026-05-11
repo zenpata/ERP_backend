@@ -514,10 +514,10 @@ export const QuotationService = {
 
     const eff = effectiveQuotationStatus(q.status, q.validUntil)
     if (eff === 'expired' || q.status === 'rejected') {
-      throw new AppError('QUOTATION_NOT_CONVERTIBLE', 'Quotation นี้แปลงเป็น SO ไม่ได้', 400)
+      throw new AppError('QUOTATION_NOT_CONVERTIBLE', 'Quotation นี้แปลงเป็น SO ไม่ได้', 422)
     }
     if (q.status !== 'sent' && q.status !== 'accepted') {
-      throw new AppError('QUOTATION_NOT_CONVERTIBLE', 'ต้องเป็น sent หรือ accepted ก่อนแปลง', 400)
+      throw new AppError('QUOTATION_NOT_CONVERTIBLE', 'ต้องเป็น sent หรือ accepted ก่อนแปลง', 422)
     }
 
     const [dup] = await db

@@ -1,7 +1,9 @@
-import { eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { db } from '../../shared/db/client'
-import { ForbiddenError, NotFoundError, ValidationError } from '../../shared/middleware/error.middleware'
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../shared/middleware/error.middleware'
+import { isEnabled, moduleFromPermission } from '../../shared/config/features'
 import {
+  employees,
   permissionAuditLogs,
   permissions,
   rolePermissions,
@@ -12,6 +14,13 @@ import {
 
 function permCode(p: { module: string; resource: string; action: string }) {
   return `${p.module}:${p.resource}:${p.action}`
+}
+
+export type UnlinkedEmployeeRow = {
+  id: string
+  code: string
+  name: string
+  email: string | null
 }
 
 export type SettingsUserRow = {
@@ -47,6 +56,88 @@ export const SettingsService = {
       isActive: u.isActive,
       roles: u.userRoles.map((ur) => ({ id: ur.role.id, name: ur.role.name })),
     }))
+  },
+
+  async listUnlinkedEmployees(): Promise<UnlinkedEmployeeRow[]> {
+    const rows = await db
+      .select({
+        id: employees.id,
+        code: employees.code,
+        firstnameTh: employees.firstnameTh,
+        lastnameTh: employees.lastnameTh,
+        email: employees.email,
+      })
+      .from(employees)
+      .where(and(isNull(employees.userId), eq(employees.status, 'active')))
+      .orderBy(employees.code)
+    return rows.map((r) => ({
+      id: r.id,
+      code: r.code,
+      name: `${r.firstnameTh} ${r.lastnameTh}`.trim(),
+      email: r.email ?? null,
+    }))
+  },
+
+  async createUser(body: {
+    email: string
+    password: string
+    roleIds?: string[]
+    employeeId?: string
+  }): Promise<SettingsUserRow> {
+    const pwErrors: string[] = []
+    if (body.password.length < 8) pwErrors.push('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร')
+    if (!/[A-Z]/.test(body.password)) pwErrors.push('ต้องมีตัวพิมพ์ใหญ่ (A–Z) อย่างน้อย 1 ตัว')
+    if (!/[0-9]/.test(body.password)) pwErrors.push('ต้องมีตัวเลขอย่างน้อย 1 ตัว')
+    if (pwErrors.length > 0) throw new ValidationError({ password: pwErrors })
+
+    if (body.employeeId) {
+      const emp = await db.query.employees.findFirst({
+        where: eq(employees.id, body.employeeId),
+      })
+      if (!emp) throw new NotFoundError('employee')
+      if (emp.userId) throw new ConflictError('EMPLOYEE_ALREADY_LINKED', 'พนักงานนี้มี user account แล้ว')
+    }
+
+    const existing = await db.query.users.findFirst({ where: eq(users.email, body.email) })
+    if (existing) {
+      throw new ConflictError('EMAIL_CONFLICT', 'อีเมลนี้ถูกใช้งานแล้ว', {
+        email: 'อีเมลนี้มีในระบบแล้ว',
+      })
+    }
+
+    const passwordHash = await Bun.password.hash(body.password)
+
+    const [created] = await db
+      .insert(users)
+      .values({
+        email: body.email,
+        passwordHash,
+        isActive: true,
+        mustChangePassword: true,
+        ...(body.employeeId ? { employeeId: body.employeeId } : {}),
+      })
+      .returning({ id: users.id })
+    if (!created) throw new ValidationError({ email: ['สร้าง user ไม่สำเร็จ'] })
+
+    if (body.employeeId) {
+      await db
+        .update(employees)
+        .set({ userId: created.id, updatedAt: new Date() })
+        .where(eq(employees.id, body.employeeId))
+    }
+
+    const uniqueRoleIds = [...new Set(body.roleIds ?? [])]
+    if (uniqueRoleIds.length > 0) {
+      await db
+        .insert(userRoles)
+        .values(uniqueRoleIds.map((roleId) => ({ userId: created.id, roleId })))
+        .onConflictDoNothing()
+    }
+
+    const list = await SettingsService.listUsers()
+    const row = list.find((x) => x.id === created.id)
+    if (!row) throw new NotFoundError('user')
+    return row
   },
 
   async patchUserRoles(userId: string, roleIds: string[]): Promise<SettingsUserRow> {
@@ -93,11 +184,12 @@ export const SettingsService = {
 
   async listPermissions(): Promise<{ id: string; code: string; description: string | null }[]> {
     const rows = await db.select().from(permissions)
-    return rows.map((p) => ({
-      id: p.id,
-      code: permCode(p),
-      description: p.description,
-    }))
+    return rows
+      .map((p) => ({ id: p.id, code: permCode(p), description: p.description }))
+      .filter((p) => {
+        const mod = moduleFromPermission(p.code)
+        return mod === null || isEnabled(mod)
+      })
   },
 
   async createRole(body: { name: string; description?: string }): Promise<SettingsRoleRow> {

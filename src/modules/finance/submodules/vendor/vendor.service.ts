@@ -348,7 +348,7 @@ export const VendorService = {
       throw new ConflictError('VENDOR_HAS_AP_RECORDS', 'Vendor has AP records')
     }
 
-    await db.delete(vendors).where(eq(vendors.id, id))
+    await db.update(vendors).set({ deletedAt: new Date(), isActive: false, updatedAt: new Date() }).where(eq(vendors.id, id))
     return { success: true as const }
   },
 }

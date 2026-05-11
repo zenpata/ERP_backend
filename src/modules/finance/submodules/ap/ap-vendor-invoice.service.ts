@@ -63,13 +63,18 @@ function parseYmdToUtcNoon(s: string): Date {
 
 async function nextApReference(tx: DbTransaction): Promise<string> {
   await tx.execute(sql`SELECT pg_advisory_xact_lock(881002)`)
-  const rows = await tx.select({ code: apBills.referenceNumber }).from(apBills)
-  let max = 0
-  for (const r of rows) {
-    const m = /^AP-(\d{4})$/.exec(r.code.trim().toUpperCase())
-    if (m) max = Math.max(max, Number(m[1]))
-  }
-  return `AP-${String(max + 1).padStart(4, '0')}`
+  const [row] = await tx
+    .select({
+      maxSeq: sql<number>`coalesce(max(
+        case when ${apBills.referenceNumber} ~ '^AP-[0-9]{4}$'
+          then (regexp_replace(${apBills.referenceNumber}, '^AP-', ''))::int
+          else 0
+        end
+      ), 0)`,
+    })
+    .from(apBills)
+  const next = (row?.maxSeq ?? 0) + 1
+  return `AP-${String(next).padStart(4, '0')}`
 }
 
 export type ApVendorInvoiceListItem = {
@@ -364,7 +369,7 @@ export const ApVendorInvoiceService = {
       }
     }
 
-    return await db.transaction(async (tx) => {
+    const newBillId = await db.transaction(async (tx) => {
       let resolvedPoId: string | null = null
       if (body.poId != null && body.poId !== '') {
         const [po] = await tx.select().from(purchaseOrders).where(eq(purchaseOrders.id, body.poId)).limit(1)
@@ -442,8 +447,9 @@ export const ApVendorInvoiceService = {
         }))
       )
 
-      return this.getById(bill.id)
+      return bill.id
     })
+    return this.getById(newBillId)
   },
 
   async patchStatus(id: string, body: { action: 'approve' | 'reject'; reason?: string }, userId: string) {

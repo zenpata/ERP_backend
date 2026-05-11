@@ -52,8 +52,12 @@ export function parseThaiDateShort(dateStr: string): Date {
   if (!dayStr || !monthStr || !yearStr) {
     throw new Error(`Invalid Thai date format: ${dateStr}`)
   }
-  const year = fromBuddhistYear(parseInt(yearStr, 10))
-  const month = parseInt(monthStr, 10) - 1
   const day = parseInt(dayStr, 10)
-  return new Date(year, month, day)
+  const month = parseInt(monthStr, 10)
+  const year = fromBuddhistYear(parseInt(yearStr, 10))
+
+  if (month < 1 || month > 12) throw new Error(`Invalid month: ${month}`)
+  if (day < 1 || day > 31) throw new Error(`Invalid day: ${day}`)
+
+  return new Date(year, month - 1, day)
 }

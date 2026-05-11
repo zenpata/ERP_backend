@@ -1,4 +1,4 @@
-import { and, count, eq, ilike, or } from 'drizzle-orm'
+import { and, count, eq, ilike, max, or } from 'drizzle-orm'
 import { db } from '../../../../shared/db/client'
 import { validateNationalId } from '../../../../shared/utils/thai-id'
 import { NotFoundError, ValidationError } from '../../../../shared/middleware/error.middleware'
@@ -167,7 +167,8 @@ export const EmployeeService = {
 }
 
 async function generateEmployeeCode(): Promise<string> {
-  const result = await db.select({ count: count() }).from(employees)
-  const total = Number(result[0]?.count ?? 0)
-  return `EMP${String(total + 1).padStart(5, '0')}`
+  const result = await db.select({ maxCode: max(employees.code) }).from(employees)
+  const maxCode = result[0]?.maxCode
+  const next = maxCode ? parseInt(maxCode, 10) + 1 : 1
+  return String(next).padStart(4, '0')
 }

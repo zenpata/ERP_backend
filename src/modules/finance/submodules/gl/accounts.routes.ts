@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia'
+import { NotFoundError } from '../../../../shared/middleware/error.middleware'
 import { requireAnyPermission } from '../../../../shared/middleware/rbac.middleware'
 import { AccountsService } from './accounts.service'
 
@@ -33,7 +34,7 @@ export const accountsRoutes = new Elysia({ prefix: '/accounts' })
       )
       .get('/:id', async ({ params }) => {
         const row = await AccountsService.getById(params.id)
-        if (!row) return { success: false, error: { code: 'NOT_FOUND', message: 'Account not found' } }
+        if (!row) throw new NotFoundError('account')
         return { success: true, data: row }
       })
   )

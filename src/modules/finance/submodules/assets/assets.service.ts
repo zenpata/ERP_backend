@@ -1,5 +1,6 @@
 import { eq, and, lte } from 'drizzle-orm'
 import { db } from '../../../../shared/db/client'
+import { ConflictError } from '../../../../shared/middleware/error.middleware'
 import { fixedAssets, assetDepreciationSchedule } from '../../finance.schema'
 import { JournalService } from '../gl/journal.service'
 import { Decimal } from 'decimal.js'
@@ -37,6 +38,9 @@ export const AssetsService = {
   async createAsset(input: CreateFixedAssetInput, userId: string) {
     const assetId = crypto.randomUUID()
     const assetNo = input.assetNo || `ASSET-${Date.now()}`
+
+    const [dup] = await db.select({ id: fixedAssets.id }).from(fixedAssets).where(eq(fixedAssets.assetNo, assetNo)).limit(1)
+    if (dup) throw new ConflictError('ASSET_NO_DUPLICATE', 'Asset number already exists', { assetNo: 'Duplicate asset number' })
 
     await db.insert(fixedAssets).values({
       id: assetId,
@@ -185,12 +189,29 @@ export const AssetsService = {
       if (!asset) continue
 
       try {
-        // Create depreciation journal entry (lines TBD by accounting setup)
+        if (!asset.depExpenseAccountId || !asset.accumDepAccountId) {
+          console.error(`Asset ${asset.name} missing GL accounts — skipping depreciation`)
+          continue
+        }
+
         const result = await JournalService.createDraft({
           date: todayStr,
           description: `Monthly depreciation: ${asset.name}`,
           referenceNo: asset.id,
-          lines: [],
+          lines: [
+            {
+              accountId: asset.depExpenseAccountId,
+              debit: row.depAmount,
+              credit: '0',
+              description: `Depreciation expense — ${asset.name}`,
+            },
+            {
+              accountId: asset.accumDepAccountId,
+              debit: '0',
+              credit: row.depAmount,
+              description: `Accumulated depreciation — ${asset.name}`,
+            },
+          ],
         })
 
         await JournalService.postEntry(result.entry.id, '')

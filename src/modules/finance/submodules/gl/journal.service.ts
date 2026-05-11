@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js'
 import { and, asc, count, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm'
 import { db } from '../../../../shared/db/client'
 import {
@@ -25,14 +26,14 @@ async function nextEntryNumber(tx: Tx): Promise<string> {
   return `JE-${String(n).padStart(6, '0')}`
 }
 
-function sumMoney(lines: JournalLineInput[], key: 'debit' | 'credit'): number {
-  let s = 0
+function sumMoney(lines: JournalLineInput[], key: 'debit' | 'credit'): Decimal {
+  let s = new Decimal(0)
   for (const l of lines) {
-    const v = Number(key === 'debit' ? l.debit : l.credit)
-    if (!Number.isFinite(v) || v < 0) throw new ValidationError({ lines: ['Invalid amount'] })
-    s += v
+    const v = new Decimal(l[key] ?? 0)
+    if (!v.isFinite() || v.lt(0)) throw new ValidationError({ lines: ['Invalid amount'] })
+    s = s.plus(v)
   }
-  return Math.round(s * 100) / 100
+  return s
 }
 
 function validateLines(lines: JournalLineInput[]): void {
@@ -48,7 +49,7 @@ function validateLines(lines: JournalLineInput[]): void {
   }
   const totalDebit = sumMoney(lines, 'debit')
   const totalCredit = sumMoney(lines, 'credit')
-  if (Math.abs(totalDebit - totalCredit) > 0.001) {
+  if (!totalDebit.eq(totalCredit)) {
     throw new ValidationError({
       lines: [`Total debit (${totalDebit}) must equal total credit (${totalCredit})`],
     })
@@ -276,31 +277,33 @@ export const JournalService = {
     id: string,
     userId: string
   ): Promise<typeof journalEntries.$inferSelect> {
-    const [existing] = await db.select().from(journalEntries).where(eq(journalEntries.id, id)).limit(1)
-    if (!existing) throw new NotFoundError('journal entry')
-    if (existing.status === 'posted') {
-      throw new ValidationError({ status: ['Journal is already posted'] })
-    }
-    if (existing.status === 'reversed') {
-      throw new ValidationError({ status: ['Cannot post a reversed journal'] })
-    }
-    if (existing.status !== 'draft' && existing.status !== 'pending_review') {
-      throw new ValidationError({ status: [`Cannot post journal with status: ${existing.status}`] })
-    }
+    return db.transaction(async (tx) => {
+      const [existing] = await tx.select().from(journalEntries).where(eq(journalEntries.id, id)).limit(1)
+      if (!existing) throw new NotFoundError('journal entry')
+      if (existing.status === 'posted') {
+        throw new ValidationError({ status: ['Journal is already posted'] })
+      }
+      if (existing.status === 'reversed') {
+        throw new ValidationError({ status: ['Cannot post a reversed journal'] })
+      }
+      if (existing.status !== 'draft' && existing.status !== 'pending_review') {
+        throw new ValidationError({ status: [`Cannot post journal with status: ${existing.status}`] })
+      }
 
-    await assertPeriodNotLocked(existing.date)
+      await assertPeriodNotLocked(existing.date)
 
-    // Re-validate balance before posting
-    const lines = await db.select().from(journalLines).where(eq(journalLines.entryId, id))
-    validateLines(lines.map((l) => ({ accountId: l.accountId, debit: l.debit, credit: l.credit })))
+      // Re-validate balance before posting
+      const lines = await tx.select().from(journalLines).where(eq(journalLines.entryId, id))
+      validateLines(lines.map((l) => ({ accountId: l.accountId, debit: l.debit, credit: l.credit })))
 
-    const [updated] = await db
-      .update(journalEntries)
-      .set({ status: 'posted', postedAt: new Date(), postedBy: userId })
-      .where(eq(journalEntries.id, id))
-      .returning()
-    if (!updated) throw new AppError('JOURNAL_POST_FAILED', 'Post journal ล้มเหลว', 500)
-    return updated
+      const [updated] = await tx
+        .update(journalEntries)
+        .set({ status: 'posted', postedAt: new Date(), postedBy: userId })
+        .where(eq(journalEntries.id, id))
+        .returning()
+      if (!updated) throw new AppError('JOURNAL_POST_FAILED', 'Post journal ล้มเหลว', 500)
+      return updated
+    })
   },
 
   /** R3-01: Create a reversal for a posted manual journal */

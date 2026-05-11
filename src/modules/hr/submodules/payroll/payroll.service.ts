@@ -2,13 +2,14 @@ import Decimal from 'decimal.js'
 import { and, count, desc, eq, sql } from 'drizzle-orm'
 import { db } from '../../../../shared/db/client'
 import {
+  AppError,
   NotFoundError,
   ValidationError,
 } from '../../../../shared/middleware/error.middleware'
 import type { PaginatedResult } from '../../../../shared/types/common.types'
 import { employees, payrollRuns, payslips, ssRecords } from '../../hr.schema'
 import type { PayrollRun, PayrollRunSummary, Payslip } from '../../hr.types'
-import { calculatePayroll } from './payroll.tax'
+import { calculatePayroll, calculateSsoContribution } from './payroll.tax'
 
 // ============================================================
 // payroll.service.ts — business logic เกี่ยวกับการคำนวณเงินเดือน
@@ -38,7 +39,7 @@ export const PayrollService = {
       .values({ periodMonth, periodYear, status: 'draft' })
       .returning()
 
-    if (!run) throw new Error('ไม่สามารถสร้าง payroll run ได้')
+    if (!run) throw new AppError('PAYROLL_CREATE_FAILED', 'ไม่สามารถสร้าง payroll run ได้', 500)
     return run
   },
 
@@ -60,7 +61,7 @@ export const PayrollService = {
       })
     }
 
-    // ดึงพนักงาน active + enrolled ss ทั้งหมด
+    // ดึงพนักงาน active ทั้งหมด
     const activeEmployees = await db
       .select()
       .from(employees)
@@ -73,96 +74,100 @@ export const PayrollService = {
     // คำนวณวันทำงานในเดือน (Mon-Fri อย่างง่าย — ปรับได้ด้วย work_schedules)
     const workingDaysInMonth = getWorkingDaysInMonth(run.periodYear, run.periodMonth)
 
-    // สร้าง payslips + ss_records รายคน
-    const payslipsToInsert = activeEmployees.map((emp) => {
-      const gross = new Decimal(emp.baseSalary)
-      const calc = calculatePayroll(gross)
-
-      return {
-        payrollRunId: runId,
-        employeeId: emp.id,
-        workingDaysInMonth,
-        actualWorkingDays: String(workingDaysInMonth),
-        absentDays: '0',
-        baseSalary: emp.baseSalary,
-        overtimeAmount: '0',
-        allowanceTotal: '0',
-        bonusTotal: '0',
-        grossSalary: calc.grossSalary.toString(),
-        ssDeduction: calc.ssoEmployee.toString(),
-        incomeTaxDeduction: calc.withholdingTax.toString(),
-        otherDeductions: '0',
-        netSalary: calc.netSalary.toString(),
-        taxCalculationMode: 'auto' as const,
-      }
-    })
-
-    const insertedPayslips = await db.insert(payslips).values(payslipsToInsert).returning()
-
-    // สร้าง ss_records รายคน (เฉพาะที่ ss_enrolled = true)
-    const ssToInsert = activeEmployees
-      .filter((emp) => emp.ssEnrolled)
-      .map((emp) => {
+    // ครอบทั้งหมดด้วย transaction เพื่อป้องกันข้อมูลไม่สมบูรณ์ถ้า step ใด fail
+    const result = await db.transaction(async (tx) => {
+      const payslipsToInsert = activeEmployees.map((emp) => {
         const gross = new Decimal(emp.baseSalary)
         const calc = calculatePayroll(gross)
-        const cappedBase = Decimal.min(
-          Decimal.max(gross, new Decimal(1_650)),
-          new Decimal(15_000)
-        )
-        const contribution = cappedBase.mul('0.05').toDecimalPlaces(2)
-        const payslip = insertedPayslips.find((p) => p.employeeId === emp.id)
 
         return {
+          payrollRunId: runId,
           employeeId: emp.id,
-          periodMonth: run.periodMonth,
-          periodYear: run.periodYear,
+          workingDaysInMonth,
+          actualWorkingDays: String(workingDaysInMonth),
+          absentDays: '0',
           baseSalary: emp.baseSalary,
-          cappedBase: cappedBase.toString(),
-          employeeContribution: contribution.toString(),
-          employerContribution: contribution.toString(),
-          totalContribution: contribution.mul(2).toString(),
-          payslipId: payslip?.id ?? null,
-          isEnrolled: true,
+          overtimeAmount: '0',
+          allowanceTotal: '0',
+          bonusTotal: '0',
+          grossSalary: calc.grossSalary.toString(),
+          ssDeduction: calc.ssoEmployee.toString(),
+          incomeTaxDeduction: calc.withholdingTax.toString(),
+          otherDeductions: '0',
+          netSalary: calc.netSalary.toString(),
+          taxCalculationMode: 'auto' as const,
         }
       })
 
-    if (ssToInsert.length > 0) {
-      await db.insert(ssRecords).values(ssToInsert)
-    }
+      const insertedPayslips = await tx.insert(payslips).values(payslipsToInsert).returning()
 
-    // คำนวณ totals
-    const totals = insertedPayslips.reduce(
-      (acc: { grossSalary: string; ssDeduction: string; incomeTaxDeduction: string; netSalary: string; count: number }, item) => ({
-        grossSalary: new Decimal(acc.grossSalary).plus(item.grossSalary).toString(),
-        ssDeduction: new Decimal(acc.ssDeduction).plus(item.ssDeduction).toString(),
-        incomeTaxDeduction: new Decimal(acc.incomeTaxDeduction).plus(item.incomeTaxDeduction).toString(),
-        netSalary: new Decimal(acc.netSalary).plus(item.netSalary).toString(),
-        count: acc.count + 1,
-      }),
-      { grossSalary: '0', ssDeduction: '0', incomeTaxDeduction: '0', netSalary: '0', count: 0 }
-    )
+      // สร้าง ss_records รายคน — ใช้ calculateSsoContribution จาก payroll.tax เพื่อไม่ duplicate logic
+      const ssToInsert = activeEmployees
+        .filter((emp) => emp.ssEnrolled)
+        .map((emp) => {
+          const gross = new Decimal(emp.baseSalary)
+          const { employee: contribution, employer: employerContrib } = calculateSsoContribution(gross)
+          const calc = calculatePayroll(gross)
+          const cappedBase = Decimal.min(
+            Decimal.max(gross, new Decimal(1_650)),
+            new Decimal(15_000)
+          )
+          const payslip = insertedPayslips.find((p) => p.employeeId === emp.id)
 
-    const totalGross = totals.grossSalary
-    const totalDeductions = new Decimal(totals.ssDeduction).plus(totals.incomeTaxDeduction).toString()
-    const totalNet = totals.netSalary
+          return {
+            employeeId: emp.id,
+            periodMonth: run.periodMonth,
+            periodYear: run.periodYear,
+            baseSalary: emp.baseSalary,
+            cappedBase: cappedBase.toString(),
+            employeeContribution: contribution.toString(),
+            employerContribution: employerContrib.toString(),
+            totalContribution: contribution.plus(employerContrib).toString(),
+            payslipId: payslip?.id ?? null,
+            isEnrolled: true,
+          }
+        })
 
-    // อัปเดต run: status → processing + totals
-    const [updatedRun] = await db
-      .update(payrollRuns)
-      .set({
-        status: 'processing',
-        processedAt: new Date(),
-        totalGross,
-        totalDeductions,
-        totalNet,
-        updatedAt: new Date(),
-      })
-      .where(eq(payrollRuns.id, runId))
-      .returning()
+      if (ssToInsert.length > 0) {
+        await tx.insert(ssRecords).values(ssToInsert)
+      }
 
-    if (!updatedRun) throw new Error('อัปเดต payroll run ไม่สำเร็จ')
+      // คำนวณ totals
+      const totals = insertedPayslips.reduce(
+        (acc: { grossSalary: string; ssDeduction: string; incomeTaxDeduction: string; netSalary: string; count: number }, item) => ({
+          grossSalary: new Decimal(acc.grossSalary).plus(item.grossSalary).toString(),
+          ssDeduction: new Decimal(acc.ssDeduction).plus(item.ssDeduction).toString(),
+          incomeTaxDeduction: new Decimal(acc.incomeTaxDeduction).plus(item.incomeTaxDeduction).toString(),
+          netSalary: new Decimal(acc.netSalary).plus(item.netSalary).toString(),
+          count: acc.count + 1,
+        }),
+        { grossSalary: '0', ssDeduction: '0', incomeTaxDeduction: '0', netSalary: '0', count: 0 }
+      )
 
-    return { ...updatedRun, payslipCount: insertedPayslips.length }
+      const totalGross = totals.grossSalary
+      const totalDeductions = new Decimal(totals.ssDeduction).plus(totals.incomeTaxDeduction).toString()
+      const totalNet = totals.netSalary
+
+      // อัปเดต run: status → processing + totals
+      const [updatedRun] = await tx
+        .update(payrollRuns)
+        .set({
+          status: 'processing',
+          processedAt: new Date(),
+          totalGross,
+          totalDeductions,
+          totalNet,
+          updatedAt: new Date(),
+        })
+        .where(eq(payrollRuns.id, runId))
+        .returning()
+
+      if (!updatedRun) throw new AppError('PAYROLL_PROCESS_FAILED', 'อัปเดต payroll run ไม่สำเร็จ', 500)
+
+      return { ...updatedRun, payslipCount: insertedPayslips.length }
+    })
+
+    return result
   },
 
   /**

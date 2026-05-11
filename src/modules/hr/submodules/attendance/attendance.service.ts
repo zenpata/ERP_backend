@@ -314,8 +314,9 @@ export const AttendanceService = {
       }
     }
 
+    // ตรวจสอบก่อน upsert เพื่อ throw error ที่ชัดเจนถ้า check-in ซ้ำ
     const [existing] = await db
-      .select()
+      .select({ clockIn: attendanceRecords.clockIn })
       .from(attendanceRecords)
       .where(and(eq(attendanceRecords.employeeId, employeeId), eq(attendanceRecords.date, today)))
       .limit(1)
@@ -326,25 +327,7 @@ export const AttendanceService = {
 
     const status = holiday ? 'holiday' : 'present'
 
-    if (existing) {
-      await db
-        .update(attendanceRecords)
-        .set({
-          clockIn: now,
-          clockMethod: canManage ? 'admin' : 'self',
-          lateMinutes: lateM,
-          breakMinutes: breakM,
-          status,
-        })
-        .where(eq(attendanceRecords.id, existing.id))
-      return {
-        id: existing.id,
-        workedMinutes: null,
-        lateMinutes: lateM,
-        overtimeMinutes: 0,
-      }
-    }
-
+    // ใช้ onConflictDoUpdate เพื่อป้องกัน race condition จาก concurrent requests
     const [ins] = await db
       .insert(attendanceRecords)
       .values({
@@ -356,6 +339,16 @@ export const AttendanceService = {
         breakMinutes: breakM,
         status,
         overtimeMinutes: 0,
+      })
+      .onConflictDoUpdate({
+        target: [attendanceRecords.employeeId, attendanceRecords.date],
+        set: {
+          clockIn: now,
+          clockMethod: canManage ? 'admin' : 'self',
+          lateMinutes: lateM,
+          breakMinutes: breakM,
+          status,
+        },
       })
       .returning({ id: attendanceRecords.id })
     if (!ins) throw new ValidationError({ body: ['Could not check in'] })

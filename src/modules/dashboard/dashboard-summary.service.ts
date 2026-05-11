@@ -1,5 +1,6 @@
 import { and, asc, count, eq, isNull, notInArray, sql } from 'drizzle-orm'
 import { db } from '../../shared/db/client'
+import { isEnabled } from '../../shared/config/features'
 import { apBills, bankAccounts, invoices } from '../finance/finance.schema'
 import { employees, leaveRequests, overtimeRequests, payrollRuns } from '../hr/hr.schema'
 import { pmBudgets, pmExpenses, pmProgressTasks } from '../pm/pm.schema'
@@ -296,9 +297,9 @@ export const DashboardSummaryService = {
   async build(permissionCodes: string[]): Promise<DashboardSummaryResponse> {
     const codes = new Set(permissionCodes)
     const trimmed: ('finance' | 'hr' | 'pm')[] = []
-    const canF = hasModuleAccess(codes, 'finance')
-    const canH = hasModuleAccess(codes, 'hr')
-    const canP = hasModuleAccess(codes, 'pm')
+    const canF = isEnabled('finance') && hasModuleAccess(codes, 'finance')
+    const canH = isEnabled('hr') && hasModuleAccess(codes, 'hr')
+    const canP = isEnabled('pm') && hasModuleAccess(codes, 'pm')
     const includeCash = codes.has('finance:bank_account:view')
 
     if (!canF) trimmed.push('finance')

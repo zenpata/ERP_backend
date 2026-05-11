@@ -51,7 +51,7 @@ export const invoiceRoutes = new Elysia({ prefix: '/invoices' })
       .use(requireAnyPermission('finance:invoice:create'))
       .post(
         '/',
-        async ({ body }) => {
+        async ({ body, set }) => {
           const payload: Parameters<typeof InvoiceService.create>[0] = {
             customerId: body.customerId,
             dueDate: body.dueDate,
@@ -83,6 +83,7 @@ export const invoiceRoutes = new Elysia({ prefix: '/invoices' })
           if (body.issueDate !== undefined) payload.issueDate = body.issueDate
           if (body.notes !== undefined) payload.notes = body.notes
           const data = await InvoiceService.create(payload)
+          set.status = 201
           return { success: true, data }
         },
         {
@@ -94,7 +95,7 @@ export const invoiceRoutes = new Elysia({ prefix: '/invoices' })
             items: t.Array(
               t.Object({
                 description: t.String({ minLength: 1 }),
-                quantity: t.Numeric({ minimum: 0 }),
+                quantity: t.Numeric({ minimum: 0.0001 }),
                 unitPrice: t.Numeric({ minimum: 0 }),
                 vatRate: t.Optional(t.Numeric({ minimum: 0, maximum: 100 })),
                 whtRate: t.Optional(t.Numeric({ minimum: 0, maximum: 100 })),

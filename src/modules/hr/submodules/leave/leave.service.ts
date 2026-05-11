@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js'
 import { and, count, desc, eq, sql } from 'drizzle-orm'
 import { getPermissionsForUser } from '../../../auth/auth.service'
 import { db } from '../../../../shared/db/client'
@@ -7,7 +8,7 @@ import {
   ValidationError,
 } from '../../../../shared/middleware/error.middleware'
 import type { PaginatedResult } from '../../../../shared/types/common.types'
-import { employees, leaveRequests, leaveTypes, users } from '../../hr.schema'
+import { employees, leaveBalances, leaveRequests, leaveTypes, users } from '../../hr.schema'
 
 export type LeaveListRow = {
   id: string
@@ -220,18 +221,53 @@ export const LeaveService = {
 
     const approverEmpId = await employeeIdForUser(userId)
 
-    const [updated] = await db
-      .update(leaveRequests)
-      .set({
-        status: 'approved',
-        approverId: approverEmpId ?? null,
-        approvedAt: new Date(),
-        updatedAt: new Date(),
+    // ตรวจสอบและหัก leave balance ใน transaction เดียวกัน
+    const updated = await db.transaction(async (tx) => {
+      const year = new Date().getFullYear()
+      const balance = await tx.query.leaveBalances.findFirst({
+        where: and(
+          eq(leaveBalances.employeeId, row.employeeId),
+          eq(leaveBalances.leaveTypeId, row.leaveTypeId),
+          eq(leaveBalances.year, year),
+        ),
       })
-      .where(eq(leaveRequests.id, id))
-      .returning()
 
-    if (!updated) throw new NotFoundError('leave request')
+      if (balance) {
+        const available = new Decimal(balance.entitledDays)
+          .plus(balance.carriedOverDays)
+          .minus(balance.usedDays)
+          .minus(balance.pendingDays)
+        const daysNeeded = new Decimal(row.daysCount)
+
+        if (available.lt(daysNeeded)) {
+          throw new ValidationError({
+            balance: [`วันลาคงเหลือไม่พอ (คงเหลือ ${available.toFixed(1)} วัน)`],
+          })
+        }
+
+        await tx
+          .update(leaveBalances)
+          .set({
+            usedDays: new Decimal(balance.usedDays).plus(daysNeeded).toFixed(1),
+          })
+          .where(eq(leaveBalances.id, balance.id))
+      }
+
+      const [approved] = await tx
+        .update(leaveRequests)
+        .set({
+          status: 'approved',
+          approverId: approverEmpId ?? null,
+          approvedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(leaveRequests.id, id))
+        .returning()
+
+      if (!approved) throw new NotFoundError('leave request')
+      return approved
+    })
+
     return updated
   },
 
@@ -261,7 +297,7 @@ export const LeaveService = {
       .set({
         status: 'rejected',
         approverId: approverEmpId ?? null,
-        approvedAt: new Date(),
+        approvedAt: null,
         updatedAt: new Date(),
       })
       .where(eq(leaveRequests.id, id))

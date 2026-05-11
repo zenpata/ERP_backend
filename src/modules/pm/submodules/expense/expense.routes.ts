@@ -1,8 +1,11 @@
 import { Elysia, t } from 'elysia'
+import { requireAnyPermission } from '../../../../shared/middleware/rbac.middleware'
 import { ExpenseService } from './expense.service'
 import { JournalService } from '../../../finance/submodules/gl/journal.service'
 
-export const expenseRoutes = new Elysia({ prefix: '/expenses' }).get(
+export const expenseRoutes = new Elysia({ prefix: '/expenses' })
+  .use(requireAnyPermission('pm:expense:view', 'pm:expense:edit'))
+  .get(
     '/',
     async ({ query }) => {
       const q: Parameters<typeof ExpenseService.list>[0] = {}

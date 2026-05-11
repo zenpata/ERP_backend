@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { db } from '../../../../shared/db/client'
 import { NotFoundError, ValidationError } from '../../../../shared/middleware/error.middleware'
 import {
@@ -114,9 +114,7 @@ export const BankReconcileService = {
       .limit(1)
 
     if (existing) {
-      throw new ValidationError({
-        period: ['Import for this period already exists'],
-      })
+      return { importId: existing.id, matchedCount: existing.matchedLines ?? 0, totalLines: existing.totalLines ?? 0 }
     }
 
     // Create import
@@ -209,7 +207,7 @@ export const BankReconcileService = {
     await db
       .update(bankStatementLines)
       .set({ matchStatus: 'exact' })
-      .where(and(eq(bankStatementLines.importId, importId), sql`${bankStatementLines.id} = ANY(${lineIds})`))
+      .where(and(eq(bankStatementLines.importId, importId), inArray(bankStatementLines.id, lineIds)))
 
     return { confirmed: lineIds.length }
   },
@@ -241,9 +239,9 @@ export const BankReconcileService = {
     const [summary] = await db
       .select({
         total: sql<number>`count(*)::int`,
-        exact: sql<number>`count(*) FILTER (WHERE ${bankStatementLines.matchStatus} = 'exact')`,
-        probable: sql<number>`count(*) FILTER (WHERE ${bankStatementLines.matchStatus} = 'probable')`,
-        unmatched: sql<number>`count(*) FILTER (WHERE ${bankStatementLines.matchStatus} = 'unmatched')`,
+        exact: sql<number>`count(*) FILTER (WHERE ${bankStatementLines.matchStatus} = 'exact')::int`,
+        probable: sql<number>`count(*) FILTER (WHERE ${bankStatementLines.matchStatus} = 'probable')::int`,
+        unmatched: sql<number>`count(*) FILTER (WHERE ${bankStatementLines.matchStatus} = 'unmatched')::int`,
       })
       .from(bankStatementLines)
       .where(eq(bankStatementLines.importId, importId))

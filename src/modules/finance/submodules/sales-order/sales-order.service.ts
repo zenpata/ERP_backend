@@ -423,6 +423,9 @@ export const SalesOrderService = {
     if (!existing) throw new NotFoundError('sales order')
 
     if (status === 'confirmed') {
+      if (existing.status === 'confirmed') {
+        return SalesOrderService.getById(id)
+      }
       if (existing.status !== 'draft') {
         throw new AppError('SO_INVALID_TRANSITION', 'ยืนยันได้เฉพาะ draft', 400)
       }

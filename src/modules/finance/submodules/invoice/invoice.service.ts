@@ -532,7 +532,7 @@ export const InvoiceService = {
           whtAmount: round2(whtTotal),
           total: round2(total),
           paidAmount: '0',
-          status: 'draft',
+          status: 'issued',
           note: null,
         })
         .returning()
@@ -625,7 +625,7 @@ export const InvoiceService = {
     }
 
     return await db.transaction(async (tx) => {
-      const [inv] = await tx.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1)
+      const [inv] = await tx.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1).for('update')
       if (!inv) throw new NotFoundError('invoice')
       if (inv.status === 'cancelled' || inv.status === 'draft') {
         throw new AppError('INVOICE_NOT_PAYABLE', 'Invoice cannot receive payments in this status', 400)
@@ -634,7 +634,7 @@ export const InvoiceService = {
       const paid = new Decimal(inv.paidAmount)
       const balance = total.minus(paid)
       if (balance.lte(0)) {
-        throw new ValidationError({ amount: ['Invoice is already fully paid'] })
+        throw new ValidationError({ amount: ['Payment exceeds outstanding balance (invoice is already paid)'] })
       }
       if (amt.gt(balance)) {
         throw new ValidationError({ amount: [`Amount exceeds balance (${balance.toFixed(2)})`] })

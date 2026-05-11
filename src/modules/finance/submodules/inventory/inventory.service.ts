@@ -1,7 +1,7 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql, type SQL } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 import { db } from '../../../../shared/db/client'
-import { NotFoundError, ValidationError } from '../../../../shared/middleware/error.middleware'
+import { ConflictError, NotFoundError, ValidationError } from '../../../../shared/middleware/error.middleware'
 import {
   products,
   stockMovements,
@@ -42,7 +42,7 @@ export const InventoryService = {
     const perPage = query.perPage ?? 20
     const offset = (page - 1) * perPage
 
-    let whereConditions: any = []
+    const whereConditions: SQL<unknown>[] = []
 
     if (query.isActive !== undefined) {
       whereConditions.push(eq(products.isActive, query.isActive))
@@ -105,12 +105,20 @@ export const InventoryService = {
   },
 
   async createProduct(input: CreateProductInput) {
+    const sku = input.sku.trim().toUpperCase()
+    const [dup] = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(eq(products.sku, sku))
+      .limit(1)
+    if (dup) throw new ConflictError('PRODUCT_SKU_DUPLICATE', 'SKU already exists', { sku: 'Duplicate SKU' })
+
     // Validate accounts exist
     const accountIds = [input.cogsAccountId, input.inventoryAccountId, input.revenueAccountId]
     const accounts = await db
       .select({ id: chartOfAccounts.id })
       .from(chartOfAccounts)
-      .where(sql`${chartOfAccounts.id} = ANY(${accountIds})`)
+      .where(inArray(chartOfAccounts.id, accountIds))
 
     if (accounts.length !== 3) {
       throw new ValidationError({ accounts: ['One or more GL accounts not found'] })
@@ -139,7 +147,7 @@ export const InventoryService = {
   async updateProduct(id: string, input: Partial<CreateProductInput>) {
     const existing = await this.getProduct(id)
 
-    const updates: any = {}
+    const updates: Partial<typeof products.$inferInsert> = {}
     if (input.name) updates.name = input.name.trim()
     if (input.unit) updates.unit = input.unit.trim()
     if (input.costPrice) updates.costPrice = new Decimal(input.costPrice).toFixed(2)
@@ -216,46 +224,48 @@ export const InventoryService = {
       throw new ValidationError({ quantity: ['Adjustment quantity cannot be zero'] })
     }
 
-    const [movement] = await db
-      .insert(stockMovements)
-      .values({
-        productId,
-        movementType: qty.isPositive() ? 'IN' : 'OUT',
-        quantity: qty.abs().toFixed(4),
-        unitCost: product.costPrice,
-        totalCost: qty.abs().mul(new Decimal(product.costPrice)).toFixed(2),
-        referenceType: 'manual',
-        notes: reason,
-        createdBy: userId,
-      })
-      .returning()
+    return db.transaction(async (tx) => {
+      const [movement] = await tx
+        .insert(stockMovements)
+        .values({
+          productId,
+          movementType: qty.isPositive() ? 'IN' : 'OUT',
+          quantity: qty.abs().toFixed(4),
+          unitCost: product.costPrice,
+          totalCost: qty.abs().mul(new Decimal(product.costPrice)).toFixed(2),
+          referenceType: 'manual',
+          notes: reason,
+          createdBy: userId,
+        })
+        .returning()
 
-    // Auto-create adjustment journal
-    if (product.inventoryAccountId) {
-      const today = new Date().toISOString().split('T')[0] ?? new Date().toISOString()
-      await JournalService.createDraft({
-        date: today,
-        description: `Stock adjustment: ${product.name} (${reason})`,
-        lines: [
-          {
-            accountId: product.inventoryAccountId,
-            debit: qty.isPositive() ? qty.mul(product.costPrice).toFixed(2) : '0',
-            credit: qty.isNegative() ? qty.abs().mul(product.costPrice).toFixed(2) : '0',
-            description: product.name,
-          },
-          // TODO: replace with a real "stock adjustment" GL account from settings
-          {
-            accountId: product.inventoryAccountId,
-            debit: qty.isNegative() ? qty.abs().mul(product.costPrice).toFixed(2) : '0',
-            credit: qty.isPositive() ? qty.mul(product.costPrice).toFixed(2) : '0',
-            description: 'Adjustment offset',
-          },
-        ],
-        createdBy: userId,
-      })
-    }
+      // Auto-create adjustment journal — if this throws, stock insert is rolled back
+      if (product.inventoryAccountId) {
+        const today = new Date().toISOString().split('T')[0] ?? new Date().toISOString()
+        await JournalService.createDraft({
+          date: today,
+          description: `Stock adjustment: ${product.name} (${reason})`,
+          lines: [
+            {
+              accountId: product.inventoryAccountId,
+              debit: qty.isPositive() ? qty.mul(product.costPrice).toFixed(2) : '0',
+              credit: qty.isNegative() ? qty.abs().mul(product.costPrice).toFixed(2) : '0',
+              description: product.name,
+            },
+            // TODO: replace with a real "stock adjustment" GL account from settings
+            {
+              accountId: product.inventoryAccountId,
+              debit: qty.isNegative() ? qty.abs().mul(product.costPrice).toFixed(2) : '0',
+              credit: qty.isPositive() ? qty.mul(product.costPrice).toFixed(2) : '0',
+              description: 'Adjustment offset',
+            },
+          ],
+          createdBy: userId,
+        })
+      }
 
-    return movement
+      return movement
+    })
   },
 
   async processInvoiceOut(invoiceId: string, lines: Array<{ productId: string; quantity: number }>, userId: string) {
@@ -344,7 +354,7 @@ export const InventoryService = {
   },
 
   async getMovementReport(productId?: string, movementType?: string) {
-    let where: any = undefined
+    let where: SQL<unknown> | undefined = undefined
 
     if (productId) {
       where = eq(stockMovements.productId, productId)

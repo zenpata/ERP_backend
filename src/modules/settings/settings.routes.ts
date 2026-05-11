@@ -11,6 +11,10 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
     const data = await SettingsService.listUsers()
     return { success: true, data }
   })
+  .get('/employees/unlinked', async () => {
+    const data = await SettingsService.listUnlinkedEmployees()
+    return { success: true, data }
+  })
   .patch(
     '/users/:id/roles',
     async ({ params, body }) => {
@@ -34,6 +38,21 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
       params: t.Object({ id: t.String() }),
       body: t.Object({
         isActive: t.Boolean(),
+      }),
+    }
+  )
+  .post(
+    '/users',
+    async ({ body }) => {
+      const data = await SettingsService.createUser(body)
+      return { success: true, data }
+    },
+    {
+      body: t.Object({
+        email: t.String({ format: 'email' }),
+        password: t.String({ minLength: 1 }),
+        roleIds: t.Optional(t.Array(t.String())),
+        employeeId: t.Optional(t.String()),
       }),
     }
   )

@@ -93,11 +93,24 @@ export const BudgetService = {
     ])
     const total = Number(totalResult[0]?.count ?? 0)
 
-    const items: BudgetListItem[] = []
-    for (const row of rows) {
-      const spent = await spentForBudget(row.id)
-      items.push(rowToListItem(row as BudgetRow, spent.toFixed(2)))
-    }
+    // Batch-fetch spent amounts in one query to avoid N+1
+    const budgetIds = rows.map((r) => r.id)
+    const spentRows =
+      budgetIds.length > 0
+        ? await db
+            .select({
+              budgetId: pmExpenses.budgetId,
+              total: sql<string>`coalesce(sum(${pmExpenses.amount}::numeric), 0)`,
+            })
+            .from(pmExpenses)
+            .where(and(inArray(pmExpenses.budgetId, budgetIds), inArray(pmExpenses.status, ['Approved', 'Paid'])))
+            .groupBy(pmExpenses.budgetId)
+        : []
+    const spentMap = new Map(spentRows.map((r) => [r.budgetId, new Decimal(r.total)]))
+
+    const items = rows.map((row) =>
+      rowToListItem(row as BudgetRow, (spentMap.get(row.id) ?? new Decimal(0)).toFixed(2))
+    )
 
     return {
       data: items,

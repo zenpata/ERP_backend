@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, isNull, lte, or, sql } from 'drizzle-orm'
+import Decimal from 'decimal.js'
 import { db } from '../../../../shared/db/client'
 import { NotFoundError } from '../../../../shared/middleware/error.middleware'
 import {
@@ -99,11 +100,11 @@ export const CollectionService = {
     })
 
     const creditUsed = openInvoices.reduce(
-      (sum, inv) => sum + (Number(inv.total) - Number(inv.paidAmount)),
-      0
+      (sum, inv) => sum.plus(new Decimal(inv.total).minus(new Decimal(inv.paidAmount))),
+      new Decimal(0)
     )
-    const creditLimit = Number(customer.creditLimit)
-    const creditAvailable = Math.max(0, creditLimit - creditUsed)
+    const creditLimit = new Decimal(customer.creditLimit)
+    const creditAvailable = Decimal.max(0, creditLimit.minus(creditUsed))
 
     // All collection notes from all customer invoices
     const allInvoiceIds = (
@@ -126,9 +127,9 @@ export const CollectionService = {
         name: customer.name,
         code: customer.code,
         creditLimit: customer.creditLimit,
-        creditUsed: String(creditUsed),
-        creditAvailable: String(creditAvailable),
-        overLimit: creditUsed > creditLimit,
+        creditUsed: creditUsed.toFixed(2),
+        creditAvailable: creditAvailable.toFixed(2),
+        overLimit: creditUsed.gt(creditLimit),
       },
       openInvoices: openWithBalance,
       collectionHistory,
